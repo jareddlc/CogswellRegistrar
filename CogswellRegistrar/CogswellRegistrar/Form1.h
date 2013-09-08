@@ -45,6 +45,8 @@ namespace CogswellRegistrar {
 	public: 
 	private: System::Windows::Forms::Label^  label_audit;
 	private: System::Windows::Forms::Button^  btn_run;
+	private: System::Windows::Forms::TextBox^  textBox_status;
+
 	private:
 		/// <summary>
 		/// Required designer variable.
@@ -60,6 +62,7 @@ namespace CogswellRegistrar {
 		{
 			System::ComponentModel::ComponentResourceManager^  resources = (gcnew System::ComponentModel::ComponentResourceManager(Form1::typeid));
 			this->group_settings = (gcnew System::Windows::Forms::GroupBox());
+			this->btn_run = (gcnew System::Windows::Forms::Button());
 			this->label_master = (gcnew System::Windows::Forms::Label());
 			this->label_audit = (gcnew System::Windows::Forms::Label());
 			this->btn_search = (gcnew System::Windows::Forms::Button());
@@ -67,8 +70,9 @@ namespace CogswellRegistrar {
 			this->btn_master = (gcnew System::Windows::Forms::Button());
 			this->btn_audit = (gcnew System::Windows::Forms::Button());
 			this->group_table = (gcnew System::Windows::Forms::GroupBox());
-			this->btn_run = (gcnew System::Windows::Forms::Button());
+			this->textBox_status = (gcnew System::Windows::Forms::TextBox());
 			this->group_settings->SuspendLayout();
+			this->group_table->SuspendLayout();
 			this->SuspendLayout();
 			// 
 			// group_settings
@@ -88,6 +92,16 @@ namespace CogswellRegistrar {
 			this->group_settings->TabIndex = 0;
 			this->group_settings->TabStop = false;
 			this->group_settings->Text = L"Settings";
+			// 
+			// btn_run
+			// 
+			this->btn_run->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
+			this->btn_run->Location = System::Drawing::Point(519, 48);
+			this->btn_run->Name = L"btn_run";
+			this->btn_run->Size = System::Drawing::Size(75, 23);
+			this->btn_run->TabIndex = 6;
+			this->btn_run->Text = L"Process";
+			this->btn_run->UseVisualStyleBackColor = true;
 			// 
 			// label_master
 			// 
@@ -150,6 +164,7 @@ namespace CogswellRegistrar {
 			this->group_table->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom) 
 				| System::Windows::Forms::AnchorStyles::Left) 
 				| System::Windows::Forms::AnchorStyles::Right));
+			this->group_table->Controls->Add(this->textBox_status);
 			this->group_table->Location = System::Drawing::Point(12, 100);
 			this->group_table->Name = L"group_table";
 			this->group_table->Size = System::Drawing::Size(600, 330);
@@ -157,15 +172,18 @@ namespace CogswellRegistrar {
 			this->group_table->TabStop = false;
 			this->group_table->Text = L"Table";
 			// 
-			// btn_run
+			// textBox_status
 			// 
-			this->btn_run->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-			this->btn_run->Location = System::Drawing::Point(519, 48);
-			this->btn_run->Name = L"btn_run";
-			this->btn_run->Size = System::Drawing::Size(75, 23);
-			this->btn_run->TabIndex = 6;
-			this->btn_run->Text = L"Process";
-			this->btn_run->UseVisualStyleBackColor = true;
+			this->textBox_status->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom) 
+				| System::Windows::Forms::AnchorStyles::Left) 
+				| System::Windows::Forms::AnchorStyles::Right));
+			this->textBox_status->Location = System::Drawing::Point(6, 19);
+			this->textBox_status->Multiline = true;
+			this->textBox_status->Name = L"textBox_status";
+			this->textBox_status->ReadOnly = true;
+			this->textBox_status->ScrollBars = System::Windows::Forms::ScrollBars::Horizontal;
+			this->textBox_status->Size = System::Drawing::Size(588, 305);
+			this->textBox_status->TabIndex = 0;
 			// 
 			// Form1
 			// 
@@ -180,11 +198,16 @@ namespace CogswellRegistrar {
 			this->Load += gcnew System::EventHandler(this, &Form1::Form1_Load);
 			this->group_settings->ResumeLayout(false);
 			this->group_settings->PerformLayout();
+			this->group_table->ResumeLayout(false);
+			this->group_table->PerformLayout();
 			this->ResumeLayout(false);
 
 		}
 		#pragma endregion
 		private: System::Void Form1_Load(System::Object^  sender, System::EventArgs^  e) {
+			this->textBox_status->Text += L"Application loaded.\r\n";
+			this->textBox_status->Select(textBox_status->Text->Length,0);
+			this->textBox_status->ScrollToCaret();
 		}
 
 		private: System::Void btn_audit_Click(System::Object^  sender, System::EventArgs^  e) {
@@ -196,6 +219,9 @@ namespace CogswellRegistrar {
 			}
 			//MessageBox::Show(audit_file->FileName);
 			this->label_audit->Text = audit_file->FileName;
+			this->textBox_status->Text += L"Audit file selected: "+audit_file->FileName+"\r\n";
+			this->textBox_status->Select(textBox_status->Text->Length,0);
+			this->textBox_status->ScrollToCaret();
 		}
 		private: System::Void btn_master_Click(System::Object^  sender, System::EventArgs^  e) {
 			master_file = gcnew OpenFileDialog();
@@ -206,6 +232,9 @@ namespace CogswellRegistrar {
 			}
 			//MessageBox::Show(master_file->FileName);
 			this->label_master->Text = master_file->FileName;
+			this->textBox_status->Text += L"Master file selected: "+master_file->FileName+"\r\n";
+			this->textBox_status->Select(textBox_status->Text->Length,0);
+			this->textBox_status->ScrollToCaret();
 		}
 };
 }
