@@ -41,13 +41,13 @@ namespace CogswellRegistrar {
 		private: System::Windows::Forms::GroupBox^  group_table;
 		public: OpenFileDialog^ audit_file;
 		public: OpenFileDialog^ master_file;
-	private: System::Windows::Forms::Label^  label_master;
-	public: 
-	private: System::Windows::Forms::Label^  label_audit;
-	private: System::Windows::Forms::Button^  btn_run;
-	private: System::Windows::Forms::TextBox^  textBox_status;
-
-	private:
+		private: System::Windows::Forms::Label^  label_master;
+		private: System::Windows::Forms::Label^  label_audit;
+		private: System::Windows::Forms::Button^  btn_run;
+		private: System::Windows::Forms::TextBox^  textBox_status;
+		public: System::Data::SQLite::SQLiteCommand^  sqLiteCommand;
+		public: System::Data::SQLite::SQLiteConnection^  sqLiteConnection;
+		private:
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
@@ -71,6 +71,8 @@ namespace CogswellRegistrar {
 			this->btn_audit = (gcnew System::Windows::Forms::Button());
 			this->group_table = (gcnew System::Windows::Forms::GroupBox());
 			this->textBox_status = (gcnew System::Windows::Forms::TextBox());
+			this->sqLiteCommand = (gcnew System::Data::SQLite::SQLiteCommand());
+			this->sqLiteConnection = (gcnew System::Data::SQLite::SQLiteConnection());
 			this->group_settings->SuspendLayout();
 			this->group_table->SuspendLayout();
 			this->SuspendLayout();
@@ -185,6 +187,17 @@ namespace CogswellRegistrar {
 			this->textBox_status->Size = System::Drawing::Size(588, 305);
 			this->textBox_status->TabIndex = 0;
 			// 
+			// sqLiteCommand
+			// 
+			this->sqLiteCommand->CommandText = nullptr;
+			// 
+			// sqLiteConnection
+			// 
+			this->sqLiteConnection->ConnectionString = "Data Source=Students.db";
+			this->sqLiteConnection->DefaultTimeout = 30;
+			this->sqLiteConnection->Flags = static_cast<System::Data::SQLite::SQLiteConnectionFlags>((System::Data::SQLite::SQLiteConnectionFlags::LogCallbackException | System::Data::SQLite::SQLiteConnectionFlags::LogModuleException));
+			this->sqLiteConnection->ParseViaFramework = false;
+			// 
 			// Form1
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -205,6 +218,10 @@ namespace CogswellRegistrar {
 		}
 		#pragma endregion
 		private: System::Void Form1_Load(System::Object^  sender, System::EventArgs^  e) {
+			this->textBox_status->Text += L"Connecting to Students.db.\r\n";
+			sqLiteConnection->Open();
+			this->textBox_status->Text += L"Connected to Students.db.\r\n";
+
 			this->textBox_status->Text += L"Application loaded.\r\n";
 			this->textBox_status->Select(textBox_status->Text->Length,0);
 			this->textBox_status->ScrollToCaret();
