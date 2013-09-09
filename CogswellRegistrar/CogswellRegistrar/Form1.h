@@ -313,13 +313,16 @@ namespace CogswellRegistrar {
 				try	
 				{
 					String ^line;
-					Array ^temp;
+					array<String^>^ temp;
 					while(line = sr->ReadLine())
 					{
 						numRows++;
 						temp = line->Split(',');
-						sCom = gcnew SQLiteCommand("INSERT INTO raw_audit VALUES('"+temp[0]+"', '1', '2', '3', '4');", sCon);
-						sCom->ExecuteNonQuery();
+						if(temp->Length >= 7)
+						{
+							sCom = gcnew SQLiteCommand("INSERT INTO raw_audit VALUES('"+temp[0]+"', '"+temp[1]+"', '"+temp[2]+"', '"+temp[5]+"', '"+temp[7]+"');", sCon);
+							sCom->ExecuteNonQuery();
+						}
 					}
 					//SQLite perform insertion
 					sCom = gcnew SQLiteCommand("END", sCon);
@@ -335,7 +338,8 @@ namespace CogswellRegistrar {
 			catch ( Exception^ e ) 
 			{
 				// Let the user know what went wrong.
-				this->textBox_status->Text += L"The file could not be read:";
+				this->textBox_status->Text += L"The file could not be read.\r\n";
+				this->textBox_status->Text += L"Error at:"+numRows+"\r\n";
 				this->textBox_status->Text += e->Message;
 			}
 		}
