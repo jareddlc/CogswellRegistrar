@@ -8,6 +8,8 @@ namespace CogswellRegistrar {
 	using namespace System::Windows::Forms;
 	using namespace System::Data;
 	using namespace System::Drawing;
+	using namespace System::IO;
+	using namespace System::Text;
 
 	/// <summary>
 	/// Summary for Form1
@@ -41,15 +43,14 @@ namespace CogswellRegistrar {
 		private: System::Windows::Forms::GroupBox^  group_table;
 		public: OpenFileDialog^ audit_file;
 		public: OpenFileDialog^ master_file;
+		public: bool audit_sel;
+		public: bool master_sel;
 		private: System::Windows::Forms::Label^  label_master;
 		private: System::Windows::Forms::Label^  label_audit;
 		private: System::Windows::Forms::Button^  btn_run;
 		private: System::Windows::Forms::TextBox^  textBox_status;
-	public: System::Data::SQLite::SQLiteCommand^  sCom;
-	public: System::Data::SQLite::SQLiteConnection^  sCon;
-	private: 
-
-
+		public: System::Data::SQLite::SQLiteCommand^  sCom;
+		public: System::Data::SQLite::SQLiteConnection^  sCon;
 		private:
 		/// <summary>
 		/// Required designer variable.
@@ -101,6 +102,7 @@ namespace CogswellRegistrar {
 			// btn_run
 			// 
 			this->btn_run->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
+			this->btn_run->Enabled = false;
 			this->btn_run->Location = System::Drawing::Point(519, 48);
 			this->btn_run->Name = L"btn_run";
 			this->btn_run->Size = System::Drawing::Size(75, 23);
@@ -234,11 +236,17 @@ namespace CogswellRegistrar {
 			{
 				return;
 			}
-			//MessageBox::Show(audit_file->FileName);
+			audit_sel = true;
 			this->label_audit->Text = audit_file->FileName;
 			this->textBox_status->Text += L"Audit file selected: "+audit_file->FileName+"\r\n";
 			this->textBox_status->Select(textBox_status->Text->Length,0);
 			this->textBox_status->ScrollToCaret();
+
+			//Check to see if files where submitted
+			if(audit_sel && master_sel) 
+			{
+				this->btn_run->Enabled = true;
+			}
 		}
 		private: System::Void btn_master_Click(System::Object^  sender, System::EventArgs^  e) {
 			master_file = gcnew OpenFileDialog();
@@ -247,17 +255,26 @@ namespace CogswellRegistrar {
 			{
 				return;
 			}
-			//MessageBox::Show(master_file->FileName);
+			master_sel = true;
 			this->label_master->Text = master_file->FileName;
 			this->textBox_status->Text += L"Master file selected: "+master_file->FileName+"\r\n";
 			this->textBox_status->Select(textBox_status->Text->Length,0);
 			this->textBox_status->ScrollToCaret();
+
+			//Check to see if files where submitted
+			if(audit_sel && master_sel) 
+			{
+				this->btn_run->Enabled = true;
+			}
 		}
 		private: System::Void btn_run_Click(System::Object^  sender, System::EventArgs^  e) {
 			this->textBox_status->Text += L"Connecting to Students.db.\r\n";
 			sCon->Open();
 			this->textBox_status->Text += L"Connected to Students.db.\r\n";
 			this->dropTables();
+			this->createTables();
+			this->csv_audit();
+
 			this->textBox_status->Text += L"Closing Students.db.\r\n";
 			sCon->Close();
 			this->textBox_status->Text += L"Closed Students.db.\r\n";
@@ -272,6 +289,50 @@ namespace CogswellRegistrar {
 			this->textBox_status->Text += L"Dropped tables.\r\n";
 			this->textBox_status->Select(textBox_status->Text->Length,0);
 			this->textBox_status->ScrollToCaret();
+		}
+		private: System::Void createTables() {
+			this->textBox_status->Text += L"Creating tables.\r\n";
+			sCom = sCon->CreateCommand();
+			sCom->CommandText = "CREATE TABLE `raw_master` (`courseID` text,`title` text,`prereq` text,`coreq` text);";
+			sCom->ExecuteNonQuery();
+			sCom->CommandText = "create table `raw_audit` (`studentInfo` text,`courseID` text,`courseDesc` text,`letterGrade` text,`completionStatus` text);";
+			sCom->ExecuteNonQuery();
+			this->textBox_status->Text += L"Created tables.\r\n";
+			this->textBox_status->Select(textBox_status->Text->Length,0);
+			this->textBox_status->ScrollToCaret();
+		}
+		private: System::Void csv_audit() {
+			int numRows = 0;
+			sCom = sCon->CreateCommand();
+			try 
+			{
+				StreamReader^ sr = gcnew StreamReader(audit_file->FileName);
+				try	
+				{
+					String ^line;
+					Array ^temp;
+					//(studentInfo, courseID, courseDesc, @dummy, @dummy, letterGrade, @dummy, completionStatus)
+					while(line = sr->ReadLine())
+					{
+						numRows++;
+						//temp = line->Split(',');
+						sCom->CommandText = "INSERT INTO raw_audit VALUES('0', '1', '2', '3', '4');";
+						sCom->ExecuteNonQuery();
+					}
+					this->textBox_status->Text += L"Inserted rows = "+numRows+"\r\n";
+				}
+				finally
+				{
+					if(sr)
+						delete(IDisposable^)sr;
+				}
+			}
+			catch ( Exception^ e ) 
+			{
+				// Let the user know what went wrong.
+				this->textBox_status->Text += L"The file could not be read:";
+				this->textBox_status->Text += e->Message;
+			}
 		}
 
 };
