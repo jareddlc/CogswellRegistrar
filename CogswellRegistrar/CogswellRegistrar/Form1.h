@@ -7,6 +7,7 @@ namespace CogswellRegistrar {
 	using namespace System::Collections;
 	using namespace System::Windows::Forms;
 	using namespace System::Data;
+	using namespace System::Data::SQLite;
 	using namespace System::Drawing;
 	using namespace System::IO;
 	using namespace System::Text;
@@ -303,7 +304,9 @@ namespace CogswellRegistrar {
 		}
 		private: System::Void csv_audit() {
 			int numRows = 0;
-			sCom = sCon->CreateCommand();
+			//SQLite Defer for large insertion
+			sCom = gcnew SQLiteCommand("BEGIN", sCon);
+			sCom->ExecuteNonQuery(); 
 			try 
 			{
 				StreamReader^ sr = gcnew StreamReader(audit_file->FileName);
@@ -311,14 +314,16 @@ namespace CogswellRegistrar {
 				{
 					String ^line;
 					Array ^temp;
-					//(studentInfo, courseID, courseDesc, @dummy, @dummy, letterGrade, @dummy, completionStatus)
 					while(line = sr->ReadLine())
 					{
 						numRows++;
 						//temp = line->Split(',');
-						sCom->CommandText = "INSERT INTO raw_audit VALUES('0', '1', '2', '3', '4');";
+						sCom = gcnew SQLiteCommand("INSERT INTO raw_audit VALUES('0', '1', '2', '3', '4');", sCon);
 						sCom->ExecuteNonQuery();
 					}
+					//SQLite perform insertion
+					sCom = gcnew SQLiteCommand("END", sCon);
+					sCom->ExecuteNonQuery();
 					this->textBox_status->Text += L"Inserted rows = "+numRows+"\r\n";
 				}
 				finally
