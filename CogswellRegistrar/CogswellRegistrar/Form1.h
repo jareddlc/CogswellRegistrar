@@ -45,8 +45,11 @@ namespace CogswellRegistrar {
 		private: System::Windows::Forms::Label^  label_audit;
 		private: System::Windows::Forms::Button^  btn_run;
 		private: System::Windows::Forms::TextBox^  textBox_status;
-		public: System::Data::SQLite::SQLiteCommand^  sqLiteCommand;
-		public: System::Data::SQLite::SQLiteConnection^  sqLiteConnection;
+	public: System::Data::SQLite::SQLiteCommand^  sCom;
+	public: System::Data::SQLite::SQLiteConnection^  sCon;
+	private: 
+
+
 		private:
 		/// <summary>
 		/// Required designer variable.
@@ -71,8 +74,8 @@ namespace CogswellRegistrar {
 			this->btn_audit = (gcnew System::Windows::Forms::Button());
 			this->group_table = (gcnew System::Windows::Forms::GroupBox());
 			this->textBox_status = (gcnew System::Windows::Forms::TextBox());
-			this->sqLiteCommand = (gcnew System::Data::SQLite::SQLiteCommand());
-			this->sqLiteConnection = (gcnew System::Data::SQLite::SQLiteConnection());
+			this->sCom = (gcnew System::Data::SQLite::SQLiteCommand());
+			this->sCon = (gcnew System::Data::SQLite::SQLiteConnection());
 			this->group_settings->SuspendLayout();
 			this->group_table->SuspendLayout();
 			this->SuspendLayout();
@@ -104,6 +107,7 @@ namespace CogswellRegistrar {
 			this->btn_run->TabIndex = 6;
 			this->btn_run->Text = L"Process";
 			this->btn_run->UseVisualStyleBackColor = true;
+			this->btn_run->Click += gcnew System::EventHandler(this, &Form1::btn_run_Click);
 			// 
 			// label_master
 			// 
@@ -187,16 +191,16 @@ namespace CogswellRegistrar {
 			this->textBox_status->Size = System::Drawing::Size(588, 305);
 			this->textBox_status->TabIndex = 0;
 			// 
-			// sqLiteCommand
+			// sCom
 			// 
-			this->sqLiteCommand->CommandText = nullptr;
+			this->sCom->CommandText = nullptr;
 			// 
-			// sqLiteConnection
+			// sCon
 			// 
-			this->sqLiteConnection->ConnectionString = "Data Source=Students.db";
-			this->sqLiteConnection->DefaultTimeout = 30;
-			this->sqLiteConnection->Flags = static_cast<System::Data::SQLite::SQLiteConnectionFlags>((System::Data::SQLite::SQLiteConnectionFlags::LogCallbackException | System::Data::SQLite::SQLiteConnectionFlags::LogModuleException));
-			this->sqLiteConnection->ParseViaFramework = false;
+			this->sCon->ConnectionString = L"Data Source=Students.db";
+			this->sCon->DefaultTimeout = 30;
+			this->sCon->Flags = static_cast<System::Data::SQLite::SQLiteConnectionFlags>((System::Data::SQLite::SQLiteConnectionFlags::LogCallbackException | System::Data::SQLite::SQLiteConnectionFlags::LogModuleException));
+			this->sCon->ParseViaFramework = false;
 			// 
 			// Form1
 			// 
@@ -218,10 +222,6 @@ namespace CogswellRegistrar {
 		}
 		#pragma endregion
 		private: System::Void Form1_Load(System::Object^  sender, System::EventArgs^  e) {
-			this->textBox_status->Text += L"Connecting to Students.db.\r\n";
-			sqLiteConnection->Open();
-			this->textBox_status->Text += L"Connected to Students.db.\r\n";
-
 			this->textBox_status->Text += L"Application loaded.\r\n";
 			this->textBox_status->Select(textBox_status->Text->Length,0);
 			this->textBox_status->ScrollToCaret();
@@ -253,5 +253,26 @@ namespace CogswellRegistrar {
 			this->textBox_status->Select(textBox_status->Text->Length,0);
 			this->textBox_status->ScrollToCaret();
 		}
+		private: System::Void btn_run_Click(System::Object^  sender, System::EventArgs^  e) {
+			this->textBox_status->Text += L"Connecting to Students.db.\r\n";
+			sCon->Open();
+			this->textBox_status->Text += L"Connected to Students.db.\r\n";
+			this->dropTables();
+			this->textBox_status->Text += L"Closing Students.db.\r\n";
+			sCon->Close();
+			this->textBox_status->Text += L"Closed Students.db.\r\n";
+		}
+		private: System::Void dropTables() {
+			this->textBox_status->Text += L"Dropping tables.\r\n";
+			sCom = sCon->CreateCommand();
+			sCom->CommandText = "DROP TABLE IF EXISTS `raw_master`;";
+			sCom->ExecuteNonQuery();
+			sCom->CommandText = "DROP TABLE IF EXISTS `raw_audit`;";
+			sCom->ExecuteNonQuery();
+			this->textBox_status->Text += L"Dropped tables.\r\n";
+			this->textBox_status->Select(textBox_status->Text->Length,0);
+			this->textBox_status->ScrollToCaret();
+		}
+
 };
 }
