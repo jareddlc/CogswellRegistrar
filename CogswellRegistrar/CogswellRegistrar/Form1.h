@@ -317,8 +317,8 @@ namespace CogswellRegistrar {
 					while(line = sr->ReadLine())
 					{
 						numRows++;
-						//temp = line->Split(',');
-						sCom = gcnew SQLiteCommand("INSERT INTO raw_audit VALUES('0', '1', '2', '3', '4');", sCon);
+						temp = line->Split(',');
+						sCom = gcnew SQLiteCommand("INSERT INTO raw_audit VALUES('"+temp[0]+"', '1', '2', '3', '4');", sCon);
 						sCom->ExecuteNonQuery();
 					}
 					//SQLite perform insertion
