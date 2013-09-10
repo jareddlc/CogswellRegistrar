@@ -1,4 +1,5 @@
 #pragma once
+#include "worker.h"
 
 namespace CogswellRegistrar {
 
@@ -224,6 +225,8 @@ namespace CogswellRegistrar {
 
 		}
 		#pragma endregion
+		//Worker ^work;
+		//Thread ^workerThread;
 		private: System::Void Form1_Load(System::Object^  sender, System::EventArgs^  e) {
 			this->textBox_status->Text += L"Application loaded.\r\n";
 			this->textBox_status->Select(textBox_status->Text->Length,0);
@@ -269,12 +272,25 @@ namespace CogswellRegistrar {
 			}
 		}
 		private: System::Void btn_run_Click(System::Object^  sender, System::EventArgs^  e) {
+
+			//work = gcnew Worker(textBox_status);
+
+			// Create a thread and calls listen method
+			//workerThread = gcnew Thread(gcnew ThreadStart(work, &Worker::Work));
+
+			// Start the thread
+			//workerThread->Start();
+
 			this->textBox_status->Text += L"Connecting to Students.db.\r\n";
 			sCon->Open();
 			this->textBox_status->Text += L"Connected to Students.db.\r\n";
 			this->dropTables();
 			this->createTables();
-			this->csv_audit();
+			this->insertAudit();
+			this->insertMaster();
+			this->CreateLetterGrades();
+			this->createAudit();
+			this->createMaster();
 
 			this->textBox_status->Text += L"Closing Students.db.\r\n";
 			sCon->Close();
@@ -283,9 +299,13 @@ namespace CogswellRegistrar {
 		private: System::Void dropTables() {
 			this->textBox_status->Text += L"Dropping tables.\r\n";
 			sCom = sCon->CreateCommand();
-			sCom->CommandText = "DROP TABLE IF EXISTS `raw_master`;";
+			sCom->CommandText = "DROP TABLE IF EXISTS raw_master;";
 			sCom->ExecuteNonQuery();
-			sCom->CommandText = "DROP TABLE IF EXISTS `raw_audit`;";
+			sCom->CommandText = "DROP TABLE IF EXISTS raw_audit;";
+			sCom->ExecuteNonQuery();
+			sCom->CommandText = "DROP TABLE IF EXISTS letterGrades;";
+			sCom->ExecuteNonQuery();
+			sCom->CommandText = "DROP TABLE IF EXISTS audit;";
 			sCom->ExecuteNonQuery();
 			this->textBox_status->Text += L"Dropped tables.\r\n";
 			this->textBox_status->Select(textBox_status->Text->Length,0);
@@ -294,15 +314,15 @@ namespace CogswellRegistrar {
 		private: System::Void createTables() {
 			this->textBox_status->Text += L"Creating tables.\r\n";
 			sCom = sCon->CreateCommand();
-			sCom->CommandText = "CREATE TABLE `raw_master` (`courseID` text,`title` text,`prereq` text,`coreq` text);";
+			sCom->CommandText = "CREATE TABLE raw_master (`courseID` text,`title` text,`prereq` text,`coreq` text);";
 			sCom->ExecuteNonQuery();
-			sCom->CommandText = "create table `raw_audit` (`studentInfo` text,`courseID` text,`courseDesc` text,`letterGrade` text,`completionStatus` text);";
+			sCom->CommandText = "CREATE TABLE raw_audit (`studentInfo` text,`courseID` text,`courseDesc` text,`letterGrade` text,`completionStatus` text);";
 			sCom->ExecuteNonQuery();
 			this->textBox_status->Text += L"Created tables.\r\n";
 			this->textBox_status->Select(textBox_status->Text->Length,0);
 			this->textBox_status->ScrollToCaret();
 		}
-		private: System::Void csv_audit() {
+		private: System::Void insertAudit() {
 			int numRows = 0;
 			//SQLite Defer for large insertion
 			sCom = gcnew SQLiteCommand("BEGIN", sCon);
@@ -343,6 +363,93 @@ namespace CogswellRegistrar {
 				this->textBox_status->Text += e->Message;
 			}
 		}
+		private: System::Void insertMaster() {
+			int numRows = 0;
+			//SQLite Defer for large insertion
+			sCom = gcnew SQLiteCommand("BEGIN", sCon);
+			sCom->ExecuteNonQuery(); 
+			try 
+			{
+				StreamReader^ sr = gcnew StreamReader(master_file->FileName);
+				try	
+				{
+					String ^line;
+					array<String^>^ temp;
+					while(line = sr->ReadLine())
+					{
+						numRows++;
+						temp = line->Split(',');
+						if(temp->Length >= 15)
+						{
+							sCom = gcnew SQLiteCommand("INSERT INTO raw_master VALUES('"+temp[0]+"', '"+temp[1]+"', '"+temp[5]+"', '"+temp[6]+"');", sCon);
+							sCom->ExecuteNonQuery();
+						}
+					}
+					//SQLite perform insertion
+					sCom = gcnew SQLiteCommand("END", sCon);
+					sCom->ExecuteNonQuery();
+					this->textBox_status->Text += L"Inserted rows = "+numRows+"\r\n";
+				}
+				finally
+				{
+					if(sr)
+						delete(IDisposable^)sr;
+				}
+			}
+			catch ( Exception^ e ) 
+			{
+				// Let the user know what went wrong.
+				this->textBox_status->Text += L"The file could not be read.\r\n";
+				this->textBox_status->Text += L"Error at:"+numRows+"\r\n";
+				this->textBox_status->Text += e->Message;
+			}
+		}
+		private: System::Void CreateLetterGrades() {
+			this->textBox_status->Text += L"Creating letterGrades table.\r\n";
+			sCom = sCon->CreateCommand();
+			sCom->CommandText = "CREATE TABLE letterGrades (`letter` varchar(2) not null,	`number` decimal(2,1) not null,	primary key (`letter`, `number`));";
+			sCom->ExecuteNonQuery();
 
-};
+			sCom = gcnew SQLiteCommand("BEGIN", sCon);
+			sCom->ExecuteNonQuery(); 
+			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('A+', '4.0');", sCon);
+			sCom->ExecuteNonQuery();
+			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('A', '4.0');", sCon);
+			sCom->ExecuteNonQuery();
+			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('A-', '3.7');", sCon);
+			sCom->ExecuteNonQuery();
+			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('B+', '3.3');", sCon);
+			sCom->ExecuteNonQuery();
+			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('B', '3.0');", sCon);
+			sCom->ExecuteNonQuery();
+			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('B-', '2.7');", sCon);
+			sCom->ExecuteNonQuery();
+			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('C+', '2.3');", sCon);
+			sCom->ExecuteNonQuery();
+			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('C', '2.0');", sCon);
+			sCom->ExecuteNonQuery();
+			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('C-', '1.7');", sCon);
+			sCom->ExecuteNonQuery();
+			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('D+', '1.3');", sCon);
+			sCom->ExecuteNonQuery();
+			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('D', '1.0');", sCon);
+			sCom->ExecuteNonQuery();
+			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('D-', '0.0');", sCon);
+			sCom->ExecuteNonQuery();
+			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('F', '0.0');", sCon);
+			sCom->ExecuteNonQuery();
+			sCom = gcnew SQLiteCommand("END", sCon);
+			sCom->ExecuteNonQuery();
+			this->textBox_status->Text += L"Created letterGrades table.\r\n";
+		}
+		private: System::Void createAudit() {
+			this->textBox_status->Text += L"Creating audit table.\r\n";
+			sCom = sCon->CreateCommand();
+			sCom->CommandText = "CREATE TABLE audit as select `studentInfo` as `studentID`, `courseID`, `completionStatus`, `number` as `numericalGrade` from `raw_audit` left join `letterGrades` on `letterGrade` = `letter`	where `courseID` != '';";
+			sCom->ExecuteNonQuery();
+			this->textBox_status->Text += L"Created audit table.\r\n";
+		}
+		private: System::Void createMaster() {
+		}
+	};
 }
