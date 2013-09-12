@@ -12,6 +12,7 @@ namespace CogswellRegistrar {
 	using namespace System::Drawing;
 	using namespace System::IO;
 	using namespace System::Text;
+	using namespace System::Threading;
 
 	/// <summary>
 	/// Summary for Form1
@@ -43,16 +44,14 @@ namespace CogswellRegistrar {
 		private: System::Windows::Forms::Button^  btn_search;
 		private: System::Windows::Forms::TextBox^  input_search;
 		private: System::Windows::Forms::GroupBox^  group_table;
-		public: OpenFileDialog^ audit_file;
-		public: OpenFileDialog^ master_file;
-		public: bool audit_sel;
-		public: bool master_sel;
+		public: OpenFileDialog^ file_audit;
+		public: OpenFileDialog^ file_master;
+		public: bool sel_audit;
+		public: bool sel_master;
 		private: System::Windows::Forms::Label^  label_master;
 		private: System::Windows::Forms::Label^  label_audit;
 		private: System::Windows::Forms::Button^  btn_run;
 		private: System::Windows::Forms::TextBox^  textBox_status;
-		public: System::Data::SQLite::SQLiteCommand^  sCom;
-		public: System::Data::SQLite::SQLiteConnection^  sCon;
 		private:
 		/// <summary>
 		/// Required designer variable.
@@ -77,8 +76,6 @@ namespace CogswellRegistrar {
 			this->btn_audit = (gcnew System::Windows::Forms::Button());
 			this->group_table = (gcnew System::Windows::Forms::GroupBox());
 			this->textBox_status = (gcnew System::Windows::Forms::TextBox());
-			this->sCom = (gcnew System::Data::SQLite::SQLiteCommand());
-			this->sCon = (gcnew System::Data::SQLite::SQLiteConnection());
 			this->group_settings->SuspendLayout();
 			this->group_table->SuspendLayout();
 			this->SuspendLayout();
@@ -195,17 +192,6 @@ namespace CogswellRegistrar {
 			this->textBox_status->Size = System::Drawing::Size(588, 305);
 			this->textBox_status->TabIndex = 0;
 			// 
-			// sCom
-			// 
-			this->sCom->CommandText = nullptr;
-			// 
-			// sCon
-			// 
-			this->sCon->ConnectionString = L"Data Source=Students.db";
-			this->sCon->DefaultTimeout = 30;
-			this->sCon->Flags = static_cast<System::Data::SQLite::SQLiteConnectionFlags>((System::Data::SQLite::SQLiteConnectionFlags::LogCallbackException | System::Data::SQLite::SQLiteConnectionFlags::LogModuleException));
-			this->sCon->ParseViaFramework = false;
-			// 
 			// Form1
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -225,8 +211,8 @@ namespace CogswellRegistrar {
 
 		}
 		#pragma endregion
-		//Worker ^work;
-		//Thread ^workerThread;
+		Worker ^work;
+		Thread ^workerThread;
 		private: System::Void Form1_Load(System::Object^  sender, System::EventArgs^  e) {
 			this->textBox_status->Text += L"Application loaded.\r\n";
 			this->textBox_status->Select(textBox_status->Text->Length,0);
@@ -234,222 +220,47 @@ namespace CogswellRegistrar {
 		}
 
 		private: System::Void btn_audit_Click(System::Object^  sender, System::EventArgs^  e) {
-			audit_file = gcnew OpenFileDialog();
-			audit_file->Filter = "CSV Files|*.csv|All Files|*.*";
-			if(audit_file->ShowDialog() != System::Windows::Forms::DialogResult::OK)
+			file_audit = gcnew OpenFileDialog();
+			file_audit->Filter = "CSV Files|*.csv|All Files|*.*";
+			if(file_audit->ShowDialog() != System::Windows::Forms::DialogResult::OK)
 			{
 				return;
 			}
-			audit_sel = true;
-			this->label_audit->Text = audit_file->FileName;
-			this->textBox_status->Text += L"Audit file selected: "+audit_file->FileName+"\r\n";
-			this->textBox_status->Select(textBox_status->Text->Length,0);
-			this->textBox_status->ScrollToCaret();
+			sel_audit = true;
+			this->label_audit->Text = file_audit->FileName;
+			this->textBox_status->Text += L"Audit file selected: "+file_audit->FileName+"\r\n";
 
 			//Check to see if files where submitted
-			if(audit_sel && master_sel) 
+			if(sel_audit && sel_master) 
 			{
 				this->btn_run->Enabled = true;
 			}
 		}
 		private: System::Void btn_master_Click(System::Object^  sender, System::EventArgs^  e) {
-			master_file = gcnew OpenFileDialog();
-			master_file->Filter = "CSV Files|*.csv|All Files|*.*";
-			if(master_file->ShowDialog() != System::Windows::Forms::DialogResult::OK)
+			file_master = gcnew OpenFileDialog();
+			file_master->Filter = "CSV Files|*.csv|All Files|*.*";
+			if(file_master->ShowDialog() != System::Windows::Forms::DialogResult::OK)
 			{
 				return;
 			}
-			master_sel = true;
-			this->label_master->Text = master_file->FileName;
-			this->textBox_status->Text += L"Master file selected: "+master_file->FileName+"\r\n";
-			this->textBox_status->Select(textBox_status->Text->Length,0);
-			this->textBox_status->ScrollToCaret();
+			sel_master = true;
+			this->label_master->Text = file_master->FileName;
+			this->textBox_status->Text += L"Master file selected: "+file_master->FileName+"\r\n";
 
 			//Check to see if files where submitted
-			if(audit_sel && master_sel) 
+			if(sel_audit && sel_master) 
 			{
 				this->btn_run->Enabled = true;
 			}
 		}
 		private: System::Void btn_run_Click(System::Object^  sender, System::EventArgs^  e) {
-
-			//work = gcnew Worker(textBox_status);
+			work = gcnew Worker(textBox_status, file_audit->FileName, file_master->FileName);
 
 			// Create a thread and calls listen method
-			//workerThread = gcnew Thread(gcnew ThreadStart(work, &Worker::Work));
+			workerThread = gcnew Thread(gcnew ThreadStart(work, &Worker::Work));
 
 			// Start the thread
-			//workerThread->Start();
-
-			this->textBox_status->Text += L"Connecting to Students.db.\r\n";
-			sCon->Open();
-			this->textBox_status->Text += L"Connected to Students.db.\r\n";
-			this->dropTables();
-			this->createTables();
-			this->insertAudit();
-			this->insertMaster();
-			this->CreateLetterGrades();
-			this->createAudit();
-			this->createMaster();
-
-			this->textBox_status->Text += L"Closing Students.db.\r\n";
-			sCon->Close();
-			this->textBox_status->Text += L"Closed Students.db.\r\n";
-		}
-		private: System::Void dropTables() {
-			this->textBox_status->Text += L"Dropping tables.\r\n";
-			sCom = sCon->CreateCommand();
-			sCom->CommandText = "DROP TABLE IF EXISTS raw_master;";
-			sCom->ExecuteNonQuery();
-			sCom->CommandText = "DROP TABLE IF EXISTS raw_audit;";
-			sCom->ExecuteNonQuery();
-			sCom->CommandText = "DROP TABLE IF EXISTS letterGrades;";
-			sCom->ExecuteNonQuery();
-			sCom->CommandText = "DROP TABLE IF EXISTS audit;";
-			sCom->ExecuteNonQuery();
-			this->textBox_status->Text += L"Dropped tables.\r\n";
-			this->textBox_status->Select(textBox_status->Text->Length,0);
-			this->textBox_status->ScrollToCaret();
-		}
-		private: System::Void createTables() {
-			this->textBox_status->Text += L"Creating tables.\r\n";
-			sCom = sCon->CreateCommand();
-			sCom->CommandText = "CREATE TABLE raw_master (`courseID` text,`title` text,`prereq` text,`coreq` text);";
-			sCom->ExecuteNonQuery();
-			sCom->CommandText = "CREATE TABLE raw_audit (`studentInfo` text,`courseID` text,`courseDesc` text,`letterGrade` text,`completionStatus` text);";
-			sCom->ExecuteNonQuery();
-			this->textBox_status->Text += L"Created tables.\r\n";
-			this->textBox_status->Select(textBox_status->Text->Length,0);
-			this->textBox_status->ScrollToCaret();
-		}
-		private: System::Void insertAudit() {
-			int numRows = 0;
-			//SQLite Defer for large insertion
-			sCom = gcnew SQLiteCommand("BEGIN", sCon);
-			sCom->ExecuteNonQuery(); 
-			try 
-			{
-				StreamReader^ sr = gcnew StreamReader(audit_file->FileName);
-				try	
-				{
-					String ^line;
-					array<String^>^ temp;
-					while(line = sr->ReadLine())
-					{
-						numRows++;
-						temp = line->Split(',');
-						if(temp->Length >= 7)
-						{
-							sCom = gcnew SQLiteCommand("INSERT INTO raw_audit VALUES('"+temp[0]+"', '"+temp[1]+"', '"+temp[2]+"', '"+temp[5]+"', '"+temp[7]+"');", sCon);
-							sCom->ExecuteNonQuery();
-						}
-					}
-					//SQLite perform insertion
-					sCom = gcnew SQLiteCommand("END", sCon);
-					sCom->ExecuteNonQuery();
-					this->textBox_status->Text += L"Inserted rows = "+numRows+"\r\n";
-				}
-				finally
-				{
-					if(sr)
-						delete(IDisposable^)sr;
-				}
-			}
-			catch ( Exception^ e ) 
-			{
-				// Let the user know what went wrong.
-				this->textBox_status->Text += L"The file could not be read.\r\n";
-				this->textBox_status->Text += L"Error at:"+numRows+"\r\n";
-				this->textBox_status->Text += e->Message;
-			}
-		}
-		private: System::Void insertMaster() {
-			int numRows = 0;
-			//SQLite Defer for large insertion
-			sCom = gcnew SQLiteCommand("BEGIN", sCon);
-			sCom->ExecuteNonQuery(); 
-			try 
-			{
-				StreamReader^ sr = gcnew StreamReader(master_file->FileName);
-				try	
-				{
-					String ^line;
-					array<String^>^ temp;
-					while(line = sr->ReadLine())
-					{
-						numRows++;
-						temp = line->Split(',');
-						if(temp->Length >= 15)
-						{
-							sCom = gcnew SQLiteCommand("INSERT INTO raw_master VALUES('"+temp[0]+"', '"+temp[1]+"', '"+temp[5]+"', '"+temp[6]+"');", sCon);
-							sCom->ExecuteNonQuery();
-						}
-					}
-					//SQLite perform insertion
-					sCom = gcnew SQLiteCommand("END", sCon);
-					sCom->ExecuteNonQuery();
-					this->textBox_status->Text += L"Inserted rows = "+numRows+"\r\n";
-				}
-				finally
-				{
-					if(sr)
-						delete(IDisposable^)sr;
-				}
-			}
-			catch ( Exception^ e ) 
-			{
-				// Let the user know what went wrong.
-				this->textBox_status->Text += L"The file could not be read.\r\n";
-				this->textBox_status->Text += L"Error at:"+numRows+"\r\n";
-				this->textBox_status->Text += e->Message;
-			}
-		}
-		private: System::Void CreateLetterGrades() {
-			this->textBox_status->Text += L"Creating letterGrades table.\r\n";
-			sCom = sCon->CreateCommand();
-			sCom->CommandText = "CREATE TABLE letterGrades (`letter` varchar(2) not null,	`number` decimal(2,1) not null,	primary key (`letter`, `number`));";
-			sCom->ExecuteNonQuery();
-
-			sCom = gcnew SQLiteCommand("BEGIN", sCon);
-			sCom->ExecuteNonQuery(); 
-			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('A+', '4.0');", sCon);
-			sCom->ExecuteNonQuery();
-			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('A', '4.0');", sCon);
-			sCom->ExecuteNonQuery();
-			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('A-', '3.7');", sCon);
-			sCom->ExecuteNonQuery();
-			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('B+', '3.3');", sCon);
-			sCom->ExecuteNonQuery();
-			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('B', '3.0');", sCon);
-			sCom->ExecuteNonQuery();
-			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('B-', '2.7');", sCon);
-			sCom->ExecuteNonQuery();
-			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('C+', '2.3');", sCon);
-			sCom->ExecuteNonQuery();
-			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('C', '2.0');", sCon);
-			sCom->ExecuteNonQuery();
-			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('C-', '1.7');", sCon);
-			sCom->ExecuteNonQuery();
-			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('D+', '1.3');", sCon);
-			sCom->ExecuteNonQuery();
-			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('D', '1.0');", sCon);
-			sCom->ExecuteNonQuery();
-			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('D-', '0.0');", sCon);
-			sCom->ExecuteNonQuery();
-			sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('F', '0.0');", sCon);
-			sCom->ExecuteNonQuery();
-			sCom = gcnew SQLiteCommand("END", sCon);
-			sCom->ExecuteNonQuery();
-			this->textBox_status->Text += L"Created letterGrades table.\r\n";
-		}
-		private: System::Void createAudit() {
-			this->textBox_status->Text += L"Creating audit table.\r\n";
-			sCom = sCon->CreateCommand();
-			sCom->CommandText = "CREATE TABLE audit as select `studentInfo` as `studentID`, `courseID`, `completionStatus`, `number` as `numericalGrade` from `raw_audit` left join `letterGrades` on `letterGrade` = `letter`	where `courseID` != '';";
-			sCom->ExecuteNonQuery();
-			this->textBox_status->Text += L"Created audit table.\r\n";
-		}
-		private: System::Void createMaster() {
+			workerThread->Start();
 		}
 	};
 }
