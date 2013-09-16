@@ -52,7 +52,14 @@ namespace CogswellRegistrar {
 		private: System::Windows::Forms::Label^  label_audit;
 		private: System::Windows::Forms::Button^  btn_run;
 		private: System::Windows::Forms::TextBox^  textBox_status;
-		private:
+	private: System::Windows::Forms::MenuStrip^  menuStrip;
+
+	private: System::Windows::Forms::ToolStripMenuItem^  fileToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^  closeToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^  aboutToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^  version010ToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^  version010ToolStripMenuItem1;
+	private:
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
@@ -76,8 +83,15 @@ namespace CogswellRegistrar {
 			this->btn_audit = (gcnew System::Windows::Forms::Button());
 			this->group_table = (gcnew System::Windows::Forms::GroupBox());
 			this->textBox_status = (gcnew System::Windows::Forms::TextBox());
+			this->menuStrip = (gcnew System::Windows::Forms::MenuStrip());
+			this->fileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->closeToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->aboutToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->version010ToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->version010ToolStripMenuItem1 = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->group_settings->SuspendLayout();
 			this->group_table->SuspendLayout();
+			this->menuStrip->SuspendLayout();
 			this->SuspendLayout();
 			// 
 			// group_settings
@@ -91,7 +105,7 @@ namespace CogswellRegistrar {
 			this->group_settings->Controls->Add(this->input_search);
 			this->group_settings->Controls->Add(this->btn_master);
 			this->group_settings->Controls->Add(this->btn_audit);
-			this->group_settings->Location = System::Drawing::Point(12, 12);
+			this->group_settings->Location = System::Drawing::Point(12, 27);
 			this->group_settings->Name = L"group_settings";
 			this->group_settings->Size = System::Drawing::Size(600, 82);
 			this->group_settings->TabIndex = 0;
@@ -172,9 +186,9 @@ namespace CogswellRegistrar {
 				| System::Windows::Forms::AnchorStyles::Left) 
 				| System::Windows::Forms::AnchorStyles::Right));
 			this->group_table->Controls->Add(this->textBox_status);
-			this->group_table->Location = System::Drawing::Point(12, 100);
+			this->group_table->Location = System::Drawing::Point(12, 115);
 			this->group_table->Name = L"group_table";
-			this->group_table->Size = System::Drawing::Size(600, 330);
+			this->group_table->Size = System::Drawing::Size(600, 315);
 			this->group_table->TabIndex = 1;
 			this->group_table->TabStop = false;
 			this->group_table->Text = L"Table";
@@ -188,9 +202,54 @@ namespace CogswellRegistrar {
 			this->textBox_status->Multiline = true;
 			this->textBox_status->Name = L"textBox_status";
 			this->textBox_status->ReadOnly = true;
-			this->textBox_status->ScrollBars = System::Windows::Forms::ScrollBars::Horizontal;
-			this->textBox_status->Size = System::Drawing::Size(588, 305);
+			this->textBox_status->ScrollBars = System::Windows::Forms::ScrollBars::Vertical;
+			this->textBox_status->Size = System::Drawing::Size(588, 290);
 			this->textBox_status->TabIndex = 0;
+			// 
+			// menuStrip
+			// 
+			this->menuStrip->BackColor = System::Drawing::SystemColors::Control;
+			this->menuStrip->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->fileToolStripMenuItem, 
+				this->aboutToolStripMenuItem});
+			this->menuStrip->Location = System::Drawing::Point(0, 0);
+			this->menuStrip->Name = L"menuStrip";
+			this->menuStrip->Size = System::Drawing::Size(624, 24);
+			this->menuStrip->TabIndex = 2;
+			this->menuStrip->Text = L"Menu";
+			// 
+			// fileToolStripMenuItem
+			// 
+			this->fileToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) {this->closeToolStripMenuItem});
+			this->fileToolStripMenuItem->Name = L"fileToolStripMenuItem";
+			this->fileToolStripMenuItem->Size = System::Drawing::Size(37, 20);
+			this->fileToolStripMenuItem->Text = L"File";
+			// 
+			// closeToolStripMenuItem
+			// 
+			this->closeToolStripMenuItem->Name = L"closeToolStripMenuItem";
+			this->closeToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->closeToolStripMenuItem->Text = L"Close";
+			this->closeToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::closeToolStripMenuItem_Click);
+			// 
+			// aboutToolStripMenuItem
+			// 
+			this->aboutToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->version010ToolStripMenuItem, 
+				this->version010ToolStripMenuItem1});
+			this->aboutToolStripMenuItem->Name = L"aboutToolStripMenuItem";
+			this->aboutToolStripMenuItem->Size = System::Drawing::Size(52, 20);
+			this->aboutToolStripMenuItem->Text = L"About";
+			// 
+			// version010ToolStripMenuItem
+			// 
+			this->version010ToolStripMenuItem->Name = L"version010ToolStripMenuItem";
+			this->version010ToolStripMenuItem->Size = System::Drawing::Size(179, 22);
+			this->version010ToolStripMenuItem->Text = L"By: Jared De La Cruz";
+			// 
+			// version010ToolStripMenuItem1
+			// 
+			this->version010ToolStripMenuItem1->Name = L"version010ToolStripMenuItem1";
+			this->version010ToolStripMenuItem1->Size = System::Drawing::Size(179, 22);
+			this->version010ToolStripMenuItem1->Text = L"Version 0.1.0";
 			// 
 			// Form1
 			// 
@@ -199,7 +258,9 @@ namespace CogswellRegistrar {
 			this->ClientSize = System::Drawing::Size(624, 442);
 			this->Controls->Add(this->group_table);
 			this->Controls->Add(this->group_settings);
+			this->Controls->Add(this->menuStrip);
 			this->Icon = (cli::safe_cast<System::Drawing::Icon^  >(resources->GetObject(L"$this.Icon")));
+			this->MainMenuStrip = this->menuStrip;
 			this->Name = L"Form1";
 			this->Text = L"Cogswell Students";
 			this->Load += gcnew System::EventHandler(this, &Form1::Form1_Load);
@@ -207,7 +268,10 @@ namespace CogswellRegistrar {
 			this->group_settings->PerformLayout();
 			this->group_table->ResumeLayout(false);
 			this->group_table->PerformLayout();
+			this->menuStrip->ResumeLayout(false);
+			this->menuStrip->PerformLayout();
 			this->ResumeLayout(false);
+			this->PerformLayout();
 
 		}
 		#pragma endregion
@@ -256,11 +320,14 @@ namespace CogswellRegistrar {
 		private: System::Void btn_run_Click(System::Object^  sender, System::EventArgs^  e) {
 			work = gcnew Worker(textBox_status, file_audit->FileName, file_master->FileName);
 
-			// Create a thread and calls listen method
+			// Create a thread and calls work method
 			workerThread = gcnew Thread(gcnew ThreadStart(work, &Worker::Work));
 
 			// Start the thread
 			workerThread->Start();
 		}
-	};
+		private: System::Void closeToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+			exit(0);
+		}
+};
 }

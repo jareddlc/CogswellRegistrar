@@ -15,3 +15,4 @@ using namespace System::Data::SQLite;
 using namespace System::Drawing;
 using namespace System::IO;
 using namespace System::Text;
+using namespace System::Text::RegularExpressions;

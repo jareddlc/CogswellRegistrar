@@ -35,7 +35,6 @@ void Worker::Work()
 	outputBox->Invoke(outputDelegate, outputBox, "Connected to Students.db.\r\n");
 
 	this->dropTables();
-	this->createTables();
 	this->insertAudit();
 	this->insertMaster();
 	this->createLetterGrades();
@@ -59,18 +58,9 @@ void Worker::dropTables()
 	sCom->ExecuteNonQuery();
 	sCom->CommandText = "DROP TABLE IF EXISTS audit;";
 	sCom->ExecuteNonQuery();
+	sCom->CommandText = "DROP TABLE IF EXISTS master;";
+	sCom->ExecuteNonQuery();
 	outputBox->Invoke(outputDelegate, outputBox, "Dropped tables.\r\n");
-}
-
-void Worker::createTables()
-{
-	outputBox->Invoke(outputDelegate, outputBox, "Creating tables.\r\n");
-	sCom = sCon->CreateCommand();
-	sCom->CommandText = "CREATE TABLE raw_master (`courseID` text, `title` text, `prereq` text, `coreq` text);";
-	sCom->ExecuteNonQuery();
-	sCom->CommandText = "CREATE TABLE raw_audit (`studentInfo` text, `courseID` text, `courseDesc` text, `letterGrade` text, `completionStatus` text);";
-	sCom->ExecuteNonQuery();
-	outputBox->Invoke(outputDelegate, outputBox, "Created tables.\r\n");
 }
 
 void Worker::createLetterGrades()
@@ -116,21 +106,35 @@ void Worker::createLetterGrades()
 void Worker::insertAudit()
 {
 	int numRows = 0;
+	outputBox->Invoke(outputDelegate, outputBox, "Creating raw_audit table.\r\n");
+	sCom = sCon->CreateCommand();
+	sCom->CommandText = "CREATE TABLE raw_audit (`studentInfo` text, `courseID` text, `courseDesc` text, `letterGrade` text, `completionStatus` text);";
+	sCom->ExecuteNonQuery();
 	//SQLite Defer for large insertion
 	sCom = gcnew SQLiteCommand("BEGIN", sCon);
-	sCom->ExecuteNonQuery(); 
+	sCom->ExecuteNonQuery();
+	Regex^ regex = gcnew Regex("^[A][0-9]{10}$", RegexOptions::IgnoreCase);
+	Match^ match;
 	try 
 	{
 		StreamReader^ sr = gcnew StreamReader(this->file_audit);
 		try	
 		{
 			String ^line;
+			String ^id;
 			array<String^>^ temp;
 			while(line = sr->ReadLine())
 			{
 				numRows++;
 				temp = line->Split(',');
-				if(temp->Length >= 7)
+				match = regex->Match(temp[0]);
+				if(match->Success)
+				{
+					id = match->ToString();
+					outputBox->Invoke(outputDelegate, outputBox, id+"\r\n");
+				}
+				temp[0] = id;
+				if(temp->Length >= 6)
 				{
 					sCom = gcnew SQLiteCommand("INSERT INTO raw_audit VALUES('"+temp[0]+"', '"+temp[1]+"', '"+temp[2]+"', '"+temp[5]+"', '"+temp[7]+"');", sCon);
 					sCom->ExecuteNonQuery();
@@ -139,7 +143,7 @@ void Worker::insertAudit()
 			//SQLite perform insertion
 			sCom = gcnew SQLiteCommand("END", sCon);
 			sCom->ExecuteNonQuery();
-			outputBox->Invoke(outputDelegate, outputBox, "Inserted rows = "+numRows+"\r\n");
+			outputBox->Invoke(outputDelegate, outputBox, "Inserted into raw_audit = "+numRows+"\r\n");
 		}
 		finally
 		{
@@ -154,11 +158,16 @@ void Worker::insertAudit()
 		outputBox->Invoke(outputDelegate, outputBox, "Error at:"+numRows+"\r\n");
 		outputBox->Invoke(outputDelegate, outputBox, e->Message);
 	}
+	outputBox->Invoke(outputDelegate, outputBox, "Created raw_audit table.\r\n");
 }
 
 void Worker::insertMaster()
 {
 	int numRows = 0;
+	outputBox->Invoke(outputDelegate, outputBox, "Creating raw_master table.\r\n");
+	sCom = sCon->CreateCommand();
+	sCom->CommandText = "CREATE TABLE raw_master (`courseID` text, `credits` text, `prereq` text, `coreq` text);";
+	sCom->ExecuteNonQuery();
 	//SQLite Defer for large insertion
 	sCom = gcnew SQLiteCommand("BEGIN", sCon);
 	sCom->ExecuteNonQuery(); 
@@ -173,16 +182,16 @@ void Worker::insertMaster()
 			{
 				numRows++;
 				temp = line->Split(',');
-				if(temp->Length >= 15)
+				if(temp->Length >= 14)
 				{
-					sCom = gcnew SQLiteCommand("INSERT INTO raw_master VALUES('"+temp[0]+"', '"+temp[1]+"', '"+temp[5]+"', '"+temp[6]+"');", sCon);
+					sCom = gcnew SQLiteCommand("INSERT INTO raw_master VALUES('"+temp[0]+"', '"+temp[1]+"', '"+temp[3]+"', '"+temp[4]+"');", sCon);
 					sCom->ExecuteNonQuery();
 				}
 			}
 			//SQLite perform insertion
 			sCom = gcnew SQLiteCommand("END", sCon);
 			sCom->ExecuteNonQuery();
-			outputBox->Invoke(outputDelegate, outputBox, "Inserted rows = "+numRows+"\r\n");
+			outputBox->Invoke(outputDelegate, outputBox, "Inserted into raw_master = "+numRows+"\r\n");
 		}
 		finally
 		{
@@ -197,6 +206,7 @@ void Worker::insertMaster()
 		outputBox->Invoke(outputDelegate, outputBox, "Error at:"+numRows+"\r\n");
 		outputBox->Invoke(outputDelegate, outputBox, e->Message);
 	}
+	outputBox->Invoke(outputDelegate, outputBox, "Created raw_master table.\r\n");
 }
 
 void Worker::createAudit()
@@ -210,4 +220,42 @@ void Worker::createAudit()
 
 void Worker::createMaster()
 {
+	outputBox->Invoke(outputDelegate, outputBox, "Creating master table.\r\n");
+	sCom = sCon->CreateCommand();
+	sCom->CommandText = "CREATE TABLE master as select * from (select replace(`courseID`,' ', '') as `courseID`, `prereq` from `raw_master`) ";
+	sCom->ExecuteNonQuery();
+	outputBox->Invoke(outputDelegate, outputBox, "Created master table.\r\n");
 }
+
+void Worker::createStanding()
+{
+}
+
+void Worker::createCanTake()
+{
+}
+
+void Worker::createNeeds()
+{
+}
+
+/*void Worker::cRegexp(sqlite3_context* ctx, int argc, sqlite3_value** argv)
+{
+	QRegExp regex;
+	QString str1((const char*)sqlite3_value_text(argv[0]));
+	QString str2((const char*)sqlite3_value_text(argv[1]));
+     
+	regex.setPattern(str1);
+	regex.setCaseSensitivity(Qt::CaseInsensitive);
+     
+	bool b = str2.contains(regex);
+     
+	if (b)
+	{
+	sqlite3_result_int(ctx, 1);
+	}
+	else
+	{
+	sqlite3_result_int(ctx, 0);
+	}
+}*/

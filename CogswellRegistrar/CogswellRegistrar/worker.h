@@ -14,10 +14,12 @@ public:
 	void Work();
 	void setTextBoxMethod(TextBox ^, String ^);
 	void dropTables();
-	void createTables();
 	void insertAudit();
 	void insertMaster();
 	void createLetterGrades();
+	void createStanding();
+	void createNeeds();
+	void createCanTake();
 	void createAudit();
 	void createMaster();
 };
