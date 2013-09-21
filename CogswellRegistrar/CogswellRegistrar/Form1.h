@@ -52,14 +52,14 @@ namespace CogswellRegistrar {
 		private: System::Windows::Forms::Label^  label_audit;
 		private: System::Windows::Forms::Button^  btn_run;
 		private: System::Windows::Forms::TextBox^  textBox_status;
-	private: System::Windows::Forms::MenuStrip^  menuStrip;
-
-	private: System::Windows::Forms::ToolStripMenuItem^  fileToolStripMenuItem;
-	private: System::Windows::Forms::ToolStripMenuItem^  closeToolStripMenuItem;
-	private: System::Windows::Forms::ToolStripMenuItem^  aboutToolStripMenuItem;
-	private: System::Windows::Forms::ToolStripMenuItem^  version010ToolStripMenuItem;
-	private: System::Windows::Forms::ToolStripMenuItem^  version010ToolStripMenuItem1;
-	private:
+		private: System::Windows::Forms::MenuStrip^  menuStrip;
+		private: System::Windows::Forms::ToolStripMenuItem^  fileToolStripMenuItem;
+		private: System::Windows::Forms::ToolStripMenuItem^  closeToolStripMenuItem;
+		private: System::Windows::Forms::ToolStripMenuItem^  aboutToolStripMenuItem;
+		private: System::Windows::Forms::ToolStripMenuItem^  version010ToolStripMenuItem;
+		private: System::Windows::Forms::ToolStripMenuItem^  version010ToolStripMenuItem1;
+		private: System::Windows::Forms::ToolStripMenuItem^  showConsoleToolStripMenuItem;
+		private:
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
@@ -85,6 +85,7 @@ namespace CogswellRegistrar {
 			this->textBox_status = (gcnew System::Windows::Forms::TextBox());
 			this->menuStrip = (gcnew System::Windows::Forms::MenuStrip());
 			this->fileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->showConsoleToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->closeToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->aboutToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->version010ToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
@@ -219,15 +220,26 @@ namespace CogswellRegistrar {
 			// 
 			// fileToolStripMenuItem
 			// 
-			this->fileToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) {this->closeToolStripMenuItem});
+			this->fileToolStripMenuItem->BackColor = System::Drawing::SystemColors::Control;
+			this->fileToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->showConsoleToolStripMenuItem, 
+				this->closeToolStripMenuItem});
 			this->fileToolStripMenuItem->Name = L"fileToolStripMenuItem";
 			this->fileToolStripMenuItem->Size = System::Drawing::Size(37, 20);
 			this->fileToolStripMenuItem->Text = L"File";
 			// 
+			// showConsoleToolStripMenuItem
+			// 
+			this->showConsoleToolStripMenuItem->BackColor = System::Drawing::SystemColors::Control;
+			this->showConsoleToolStripMenuItem->ForeColor = System::Drawing::SystemColors::ControlText;
+			this->showConsoleToolStripMenuItem->Name = L"showConsoleToolStripMenuItem";
+			this->showConsoleToolStripMenuItem->Size = System::Drawing::Size(149, 22);
+			this->showConsoleToolStripMenuItem->Text = L"Show Console";
+			this->showConsoleToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::showConsoleToolStripMenuItem_Click);
+			// 
 			// closeToolStripMenuItem
 			// 
 			this->closeToolStripMenuItem->Name = L"closeToolStripMenuItem";
-			this->closeToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->closeToolStripMenuItem->Size = System::Drawing::Size(149, 22);
 			this->closeToolStripMenuItem->Text = L"Close";
 			this->closeToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::closeToolStripMenuItem_Click);
 			// 
@@ -328,6 +340,13 @@ namespace CogswellRegistrar {
 		}
 		private: System::Void closeToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
 			exit(0);
+		}
+		private: System::Void showConsoleToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+			if(this->textBox_status->Visible == true) {
+				this->textBox_status->Visible = false;
+			}
+			else
+				this->textBox_status->Visible = true;	
 		}
 };
 }

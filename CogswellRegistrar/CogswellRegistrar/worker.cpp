@@ -5,7 +5,7 @@ Worker::Worker(TextBox ^textBox, String ^audit, String ^master) {
 	// textBox
 	outputBox = textBox;
 	outputDelegate = gcnew setTextBoxText(this, &Worker::setTextBoxMethod);
-	outputBox->Invoke(outputDelegate, outputBox, "Initializing...\r\n");
+	outputBox->Invoke(outputDelegate, outputBox, "Initializing...");
 
 	// file
 	this->file_audit = audit;
@@ -21,6 +21,7 @@ Worker::Worker(TextBox ^textBox, String ^audit, String ^master) {
 	this->sCon->DefaultTimeout = 30;
 	this->sCon->Flags = static_cast<SQLiteConnectionFlags>((SQLiteConnectionFlags::LogCallbackException | SQLiteConnectionFlags::LogModuleException));
 	this->sCon->ParseViaFramework = false;
+	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 }
 
 void Worker::setTextBoxMethod(System::Windows::Forms::TextBox ^T, String ^str)
@@ -30,9 +31,9 @@ void Worker::setTextBoxMethod(System::Windows::Forms::TextBox ^T, String ^str)
 
 void Worker::Work()
 {
-	outputBox->Invoke(outputDelegate, outputBox, "Connecting to Students.db.\r\n");
+	outputBox->Invoke(outputDelegate, outputBox, "Connecting to Students.db...");
 	sCon->Open();
-	outputBox->Invoke(outputDelegate, outputBox, "Connected to Students.db.\r\n");
+	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 
 	this->dropTables();
 	this->insertAudit();
@@ -41,14 +42,16 @@ void Worker::Work()
 	this->createAudit();
 	this->createMaster();
 
-	outputBox->Invoke(outputDelegate, outputBox, "Closing Students.db.\r\n");
+	outputBox->Invoke(outputDelegate, outputBox, "Closing Students.db...");
 	sCon->Close();
-	outputBox->Invoke(outputDelegate, outputBox, "Closed Students.db.\r\n");
+	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
+
+	outputBox->Invoke(outputDelegate, outputBox, "Process complete.\r\n");
 }
 
 void Worker::dropTables()
 {
-	outputBox->Invoke(outputDelegate, outputBox, "Dropping tables.\r\n");
+	outputBox->Invoke(outputDelegate, outputBox, "Dropping tables...");
 	sCom = sCon->CreateCommand();
 	sCom->CommandText = "DROP TABLE IF EXISTS raw_master;";
 	sCom->ExecuteNonQuery();
@@ -60,12 +63,12 @@ void Worker::dropTables()
 	sCom->ExecuteNonQuery();
 	sCom->CommandText = "DROP TABLE IF EXISTS master;";
 	sCom->ExecuteNonQuery();
-	outputBox->Invoke(outputDelegate, outputBox, "Dropped tables.\r\n");
+	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 }
 
 void Worker::createLetterGrades()
 {
-	outputBox->Invoke(outputDelegate, outputBox, "Creating letterGrades table.\r\n");
+	outputBox->Invoke(outputDelegate, outputBox, "Creating letterGrades table...");
 	sCom = sCon->CreateCommand();
 	sCom->CommandText = "CREATE TABLE letterGrades (`letter` varchar(2) not null, `number` decimal(2,1) not null, primary key (`letter`, `number`));";
 	sCom->ExecuteNonQuery();
@@ -100,13 +103,13 @@ void Worker::createLetterGrades()
 	sCom->ExecuteNonQuery();
 	sCom = gcnew SQLiteCommand("END", sCon);
 	sCom->ExecuteNonQuery();
-	outputBox->Invoke(outputDelegate, outputBox, "Created letterGrades table.\r\n");
+	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 }
 
 void Worker::insertAudit()
 {
 	int numRows = 0;
-	outputBox->Invoke(outputDelegate, outputBox, "Creating raw_audit table.\r\n");
+	outputBox->Invoke(outputDelegate, outputBox, "Creating raw_audit table...");
 	sCom = sCon->CreateCommand();
 	sCom->CommandText = "CREATE TABLE raw_audit (`studentInfo` text, `courseID` text, `courseDesc` text, `letterGrade` text, `completionStatus` text);";
 	sCom->ExecuteNonQuery();
@@ -131,7 +134,7 @@ void Worker::insertAudit()
 				if(match->Success)
 				{
 					id = match->ToString();
-					outputBox->Invoke(outputDelegate, outputBox, id+"\r\n");
+					//outputBox->Invoke(outputDelegate, outputBox, id+"\r\n");
 				}
 				temp[0] = id;
 				if(temp->Length >= 6)
@@ -143,7 +146,7 @@ void Worker::insertAudit()
 			//SQLite perform insertion
 			sCom = gcnew SQLiteCommand("END", sCon);
 			sCom->ExecuteNonQuery();
-			outputBox->Invoke(outputDelegate, outputBox, "Inserted into raw_audit = "+numRows+"\r\n");
+			outputBox->Invoke(outputDelegate, outputBox, "Inserted: "+numRows+". ");
 		}
 		finally
 		{
@@ -158,13 +161,13 @@ void Worker::insertAudit()
 		outputBox->Invoke(outputDelegate, outputBox, "Error at:"+numRows+"\r\n");
 		outputBox->Invoke(outputDelegate, outputBox, e->Message);
 	}
-	outputBox->Invoke(outputDelegate, outputBox, "Created raw_audit table.\r\n");
+	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 }
 
 void Worker::insertMaster()
 {
 	int numRows = 0;
-	outputBox->Invoke(outputDelegate, outputBox, "Creating raw_master table.\r\n");
+	outputBox->Invoke(outputDelegate, outputBox, "Creating raw_master table...");
 	sCom = sCon->CreateCommand();
 	sCom->CommandText = "CREATE TABLE raw_master (`courseID` text, `credits` text, `prereq` text, `coreq` text);";
 	sCom->ExecuteNonQuery();
@@ -191,7 +194,7 @@ void Worker::insertMaster()
 			//SQLite perform insertion
 			sCom = gcnew SQLiteCommand("END", sCon);
 			sCom->ExecuteNonQuery();
-			outputBox->Invoke(outputDelegate, outputBox, "Inserted into raw_master = "+numRows+"\r\n");
+			outputBox->Invoke(outputDelegate, outputBox, "Inserted: "+numRows+". ");
 		}
 		finally
 		{
@@ -206,25 +209,25 @@ void Worker::insertMaster()
 		outputBox->Invoke(outputDelegate, outputBox, "Error at:"+numRows+"\r\n");
 		outputBox->Invoke(outputDelegate, outputBox, e->Message);
 	}
-	outputBox->Invoke(outputDelegate, outputBox, "Created raw_master table.\r\n");
+	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 }
 
 void Worker::createAudit()
 {
-	outputBox->Invoke(outputDelegate, outputBox, "Creating audit table.\r\n");
+	outputBox->Invoke(outputDelegate, outputBox, "Creating audit table...");
 	sCom = sCon->CreateCommand();
 	sCom->CommandText = "CREATE TABLE audit as select `studentInfo` as `studentID`, `courseID`, `completionStatus`, `number` as `numericalGrade` from `raw_audit` left join `letterGrades` on `letterGrade` = `letter`	where `courseID` != '';";
 	sCom->ExecuteNonQuery();
-	outputBox->Invoke(outputDelegate, outputBox, "Created audit table.\r\n");
+	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 }
 
 void Worker::createMaster()
 {
-	outputBox->Invoke(outputDelegate, outputBox, "Creating master table.\r\n");
+	outputBox->Invoke(outputDelegate, outputBox, "Creating master table...");
 	sCom = sCon->CreateCommand();
 	sCom->CommandText = "CREATE TABLE master as select * from (select replace(`courseID`,' ', '') as `courseID`, `prereq` from `raw_master`) ";
 	sCom->ExecuteNonQuery();
-	outputBox->Invoke(outputDelegate, outputBox, "Created master table.\r\n");
+	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 }
 
 void Worker::createStanding()
