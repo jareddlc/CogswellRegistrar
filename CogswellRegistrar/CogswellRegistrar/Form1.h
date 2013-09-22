@@ -59,11 +59,12 @@ namespace CogswellRegistrar {
 		private: System::Windows::Forms::ToolStripMenuItem^  version010ToolStripMenuItem;
 		private: System::Windows::Forms::ToolStripMenuItem^  version010ToolStripMenuItem1;
 		private: System::Windows::Forms::ToolStripMenuItem^  showConsoleToolStripMenuItem;
+		private: System::ComponentModel::IContainer^  components;
 		private:
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
-		System::ComponentModel::Container ^components;
+
 
 		#pragma region Windows Form Designer generated code
 		/// <summary>
@@ -117,18 +118,21 @@ namespace CogswellRegistrar {
 			// 
 			this->btn_run->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
 			this->btn_run->Enabled = false;
-			this->btn_run->Location = System::Drawing::Point(519, 48);
+			this->btn_run->Image = (cli::safe_cast<System::Drawing::Image^  >(resources->GetObject(L"btn_run.Image")));
+			this->btn_run->ImageAlign = System::Drawing::ContentAlignment::MiddleLeft;
+			this->btn_run->Location = System::Drawing::Point(526, 48);
 			this->btn_run->Name = L"btn_run";
-			this->btn_run->Size = System::Drawing::Size(75, 23);
+			this->btn_run->Size = System::Drawing::Size(68, 23);
 			this->btn_run->TabIndex = 6;
 			this->btn_run->Text = L"Process";
+			this->btn_run->TextAlign = System::Drawing::ContentAlignment::MiddleRight;
 			this->btn_run->UseVisualStyleBackColor = true;
 			this->btn_run->Click += gcnew System::EventHandler(this, &Form1::btn_run_Click);
 			// 
 			// label_master
 			// 
 			this->label_master->AutoSize = true;
-			this->label_master->Location = System::Drawing::Point(87, 53);
+			this->label_master->Location = System::Drawing::Point(99, 53);
 			this->label_master->Name = L"label_master";
 			this->label_master->Size = System::Drawing::Size(62, 13);
 			this->label_master->TabIndex = 5;
@@ -137,7 +141,7 @@ namespace CogswellRegistrar {
 			// label_audit
 			// 
 			this->label_audit->AutoSize = true;
-			this->label_audit->Location = System::Drawing::Point(87, 24);
+			this->label_audit->Location = System::Drawing::Point(99, 24);
 			this->label_audit->Name = L"label_audit";
 			this->label_audit->Size = System::Drawing::Size(62, 13);
 			this->label_audit->TabIndex = 4;
@@ -146,38 +150,47 @@ namespace CogswellRegistrar {
 			// btn_search
 			// 
 			this->btn_search->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-			this->btn_search->Location = System::Drawing::Point(519, 19);
+			this->btn_search->Image = (cli::safe_cast<System::Drawing::Image^  >(resources->GetObject(L"btn_search.Image")));
+			this->btn_search->ImageAlign = System::Drawing::ContentAlignment::MiddleLeft;
+			this->btn_search->Location = System::Drawing::Point(526, 19);
 			this->btn_search->Name = L"btn_search";
-			this->btn_search->Size = System::Drawing::Size(75, 23);
+			this->btn_search->Size = System::Drawing::Size(68, 23);
 			this->btn_search->TabIndex = 3;
 			this->btn_search->Text = L"Search";
+			this->btn_search->TextAlign = System::Drawing::ContentAlignment::MiddleRight;
 			this->btn_search->UseVisualStyleBackColor = true;
 			// 
 			// input_search
 			// 
 			this->input_search->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-			this->input_search->Location = System::Drawing::Point(345, 21);
+			this->input_search->Location = System::Drawing::Point(352, 22);
 			this->input_search->Name = L"input_search";
 			this->input_search->Size = System::Drawing::Size(168, 20);
 			this->input_search->TabIndex = 2;
 			// 
 			// btn_master
 			// 
+			this->btn_master->Image = (cli::safe_cast<System::Drawing::Image^  >(resources->GetObject(L"btn_master.Image")));
+			this->btn_master->ImageAlign = System::Drawing::ContentAlignment::MiddleLeft;
 			this->btn_master->Location = System::Drawing::Point(6, 48);
 			this->btn_master->Name = L"btn_master";
-			this->btn_master->Size = System::Drawing::Size(75, 23);
+			this->btn_master->Size = System::Drawing::Size(87, 23);
 			this->btn_master->TabIndex = 1;
-			this->btn_master->Text = L"Master List";
+			this->btn_master->Text = L"Master CSV";
+			this->btn_master->TextAlign = System::Drawing::ContentAlignment::MiddleRight;
 			this->btn_master->UseVisualStyleBackColor = true;
 			this->btn_master->Click += gcnew System::EventHandler(this, &Form1::btn_master_Click);
 			// 
 			// btn_audit
 			// 
+			this->btn_audit->Image = (cli::safe_cast<System::Drawing::Image^  >(resources->GetObject(L"btn_audit.Image")));
+			this->btn_audit->ImageAlign = System::Drawing::ContentAlignment::MiddleLeft;
 			this->btn_audit->Location = System::Drawing::Point(6, 19);
 			this->btn_audit->Name = L"btn_audit";
-			this->btn_audit->Size = System::Drawing::Size(75, 23);
+			this->btn_audit->Size = System::Drawing::Size(87, 23);
 			this->btn_audit->TabIndex = 0;
-			this->btn_audit->Text = L"Audit List";
+			this->btn_audit->Text = L"Audit CSV";
+			this->btn_audit->TextAlign = System::Drawing::ContentAlignment::MiddleRight;
 			this->btn_audit->UseVisualStyleBackColor = true;
 			this->btn_audit->Click += gcnew System::EventHandler(this, &Form1::btn_audit_Click);
 			// 
@@ -274,7 +287,8 @@ namespace CogswellRegistrar {
 			this->Icon = (cli::safe_cast<System::Drawing::Icon^  >(resources->GetObject(L"$this.Icon")));
 			this->MainMenuStrip = this->menuStrip;
 			this->Name = L"Form1";
-			this->Text = L"Cogswell Students";
+			this->Text = L"Cogswell Student Audit";
+			this->WindowState = System::Windows::Forms::FormWindowState::Maximized;
 			this->Load += gcnew System::EventHandler(this, &Form1::Form1_Load);
 			this->group_settings->ResumeLayout(false);
 			this->group_settings->PerformLayout();
@@ -348,5 +362,6 @@ namespace CogswellRegistrar {
 			else
 				this->textBox_status->Visible = true;	
 		}
+
 };
 }

@@ -21,6 +21,7 @@ Worker::Worker(TextBox ^textBox, String ^audit, String ^master) {
 	this->sCon->DefaultTimeout = 30;
 	this->sCon->Flags = static_cast<SQLiteConnectionFlags>((SQLiteConnectionFlags::LogCallbackException | SQLiteConnectionFlags::LogModuleException));
 	this->sCon->ParseViaFramework = false;
+
 	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 }
 
@@ -41,6 +42,9 @@ void Worker::Work()
 	this->createLetterGrades();
 	this->createAudit();
 	this->createMaster();
+	this->createStanding();
+	this->createNeeds();
+	this->createCanTake();
 
 	outputBox->Invoke(outputDelegate, outputBox, "Closing Students.db...");
 	sCon->Close();
@@ -62,6 +66,12 @@ void Worker::dropTables()
 	sCom->CommandText = "DROP TABLE IF EXISTS audit;";
 	sCom->ExecuteNonQuery();
 	sCom->CommandText = "DROP TABLE IF EXISTS master;";
+	sCom->ExecuteNonQuery();
+	sCom->CommandText = "DROP TABLE IF EXISTS standing;";
+	sCom->ExecuteNonQuery();
+	sCom->CommandText = "DROP TABLE IF EXISTS needs;";
+	sCom->ExecuteNonQuery();
+	sCom->CommandText = "DROP TABLE IF EXISTS canTake;";
 	sCom->ExecuteNonQuery();
 	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 }
@@ -232,12 +242,45 @@ void Worker::createMaster()
 
 void Worker::createStanding()
 {
-}
-
-void Worker::createCanTake()
-{
+	outputBox->Invoke(outputDelegate, outputBox, "Creating standing table...");
+	sCom = sCon->CreateCommand();
+	sCom->CommandText = "CREATE TABLE `standing` as select distinct `studentID`, 'Senior' as `collegeLevel` from `audit`";
+	sCom->ExecuteNonQuery();
+	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 }
 
 void Worker::createNeeds()
 {
+	outputBox->Invoke(outputDelegate, outputBox, "Creating needs table...");
+	sCom = sCon->CreateCommand();
+	sCom->CommandText = "CREATE TABLE `needs` as select `studentID`, `courseID` from `audit` where `completionStatus` = 'R'";
+	sCom->ExecuteNonQuery();
+	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 }
+
+void Worker::createCanTake()
+{
+	outputBox->Invoke(outputDelegate, outputBox, "Creating canTake table...");
+	sCom = sCon->CreateCommand();
+	sCom->CommandText = "CREATE TABLE CanTake ( `StudentID`  text, `CourseID` text)";
+	sCom->ExecuteNonQuery();
+
+	sCom->CommandText = "select `courseID`, `prereq` from `master`;";
+	SQLiteDataReader ^reader = sCom->ExecuteReader();
+	String ^row;
+	array<String^>^ rows;
+	while(reader->Read())
+    {
+		for (int col = 0; col < reader->FieldCount; ++col)
+        {
+			//outputBox->Invoke(outputDelegate, outputBox, reader->GetValue(col)->ToString());
+			row += reader->GetValue(col)->ToString();
+			if(col == 0)
+				row += ",";
+        }
+		outputBox->Invoke(outputDelegate, outputBox, row+"\r\n");
+		row = "";
+    }
+	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
+}
+
