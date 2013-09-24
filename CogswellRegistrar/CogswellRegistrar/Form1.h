@@ -362,6 +362,5 @@ namespace CogswellRegistrar {
 			else
 				this->textBox_status->Visible = true;	
 		}
-
 };
 }

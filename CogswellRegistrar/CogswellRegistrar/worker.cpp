@@ -226,7 +226,7 @@ void Worker::createAudit()
 {
 	outputBox->Invoke(outputDelegate, outputBox, "Creating audit table...");
 	sCom = sCon->CreateCommand();
-	sCom->CommandText = "CREATE TABLE audit as select `studentInfo` as `studentID`, `courseID`, `completionStatus`, `number` as `numericalGrade` from `raw_audit` left join `letterGrades` on `letterGrade` = `letter`	where `courseID` != '';";
+	sCom->CommandText = "CREATE TABLE audit AS select `studentInfo` AS `studentID`, `courseID`, `completionStatus`, `number` AS `numericalGrade` FROM `raw_audit` left join `letterGrades` on `letterGrade` = `letter`	WHERE `courseID` != '';";
 	sCom->ExecuteNonQuery();
 	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 }
@@ -235,7 +235,7 @@ void Worker::createMaster()
 {
 	outputBox->Invoke(outputDelegate, outputBox, "Creating master table...");
 	sCom = sCon->CreateCommand();
-	sCom->CommandText = "CREATE TABLE master as select * from (select replace(`courseID`,' ', '') as `courseID`, `prereq` from `raw_master`) ";
+	sCom->CommandText = "CREATE TABLE master AS select * FROM (select replace(`courseID`,' ', '') AS `courseID`, `prereq` FROM `raw_master`) ";
 	sCom->ExecuteNonQuery();
 	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 }
@@ -244,7 +244,7 @@ void Worker::createStanding()
 {
 	outputBox->Invoke(outputDelegate, outputBox, "Creating standing table...");
 	sCom = sCon->CreateCommand();
-	sCom->CommandText = "CREATE TABLE `standing` as select distinct `studentID`, 'Senior' as `collegeLevel` from `audit`";
+	sCom->CommandText = "CREATE TABLE `standing` AS select distinct `studentID`, 'Senior' AS `collegeLevel` FROM `audit`";
 	sCom->ExecuteNonQuery();
 	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 }
@@ -253,7 +253,7 @@ void Worker::createNeeds()
 {
 	outputBox->Invoke(outputDelegate, outputBox, "Creating needs table...");
 	sCom = sCon->CreateCommand();
-	sCom->CommandText = "CREATE TABLE `needs` as select `studentID`, `courseID` from `audit` where `completionStatus` = 'R'";
+	sCom->CommandText = "CREATE TABLE `needs` AS select `studentID`, `courseID` FROM `audit` WHERE `completionStatus` = 'R'";
 	sCom->ExecuteNonQuery();
 	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 }
@@ -262,25 +262,42 @@ void Worker::createCanTake()
 {
 	outputBox->Invoke(outputDelegate, outputBox, "Creating canTake table...");
 	sCom = sCon->CreateCommand();
-	sCom->CommandText = "CREATE TABLE CanTake ( `StudentID`  text, `CourseID` text)";
+	sCom->CommandText = "CREATE TABLE canTake ( `StudentID`  text, `CourseID` text)";
 	sCom->ExecuteNonQuery();
 
-	sCom->CommandText = "select `courseID`, `prereq` from `master`;";
+	sCom->CommandText = "SELECT `studentID`, `courseID` FROM `needs`;";
 	SQLiteDataReader ^reader = sCom->ExecuteReader();
 	String ^row;
-	array<String^>^ rows;
 	while(reader->Read())
     {
-		for (int col = 0; col < reader->FieldCount; ++col)
+		for(int col = 0; col < reader->FieldCount; ++col)
         {
-			//outputBox->Invoke(outputDelegate, outputBox, reader->GetValue(col)->ToString());
 			row += reader->GetValue(col)->ToString();
 			if(col == 0)
 				row += ",";
         }
-		outputBox->Invoke(outputDelegate, outputBox, row+"\r\n");
+		this->preReqs(row);
 		row = "";
     }
 	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 }
 
+bool Worker::preReqs(String ^pre)
+{
+	array<String^> ^need;
+	need = pre->Split(',');
+
+	sCom = sCon->CreateCommand();
+	sCom->CommandText = "SELECT `prereq` FROM `master` WHERE `courseID` = \""+need[1]+"\";";
+	SQLiteDataReader ^reader = sCom->ExecuteReader();
+	String ^row;
+	while(reader->Read())
+    {
+		for(int col = 0; col < reader->FieldCount; ++col)
+        {
+			row += reader->GetValue(col)->ToString();
+        }
+		outputBox->Invoke(outputDelegate, outputBox, need[1]+": "+reader->GetValue(0)->ToString()+"\r\n");
+    }
+	return true;
+}

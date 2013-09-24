@@ -17,9 +17,10 @@ public:
 	void insertAudit();
 	void insertMaster();
 	void createLetterGrades();
+	void createAudit();
+	void createMaster();
 	void createStanding();
 	void createNeeds();
 	void createCanTake();
-	void createAudit();
-	void createMaster();
+	bool preReqs(String ^);
 };
