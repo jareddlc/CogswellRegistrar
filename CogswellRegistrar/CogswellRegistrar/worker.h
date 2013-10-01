@@ -8,6 +8,7 @@ ref class Worker {
 	TextBox ^outputBox;
 	delegate void setTextBoxText(TextBox ^, String ^);
 	setTextBoxText ^outputDelegate;
+	array<String^>^ excluded;
 	
 public:
 	Worker(TextBox ^, String ^, String ^);

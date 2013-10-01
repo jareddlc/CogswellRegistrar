@@ -2,6 +2,10 @@
 #include "worker.h"
 
 Worker::Worker(TextBox ^textBox, String ^audit, String ^master) {
+	// excluded list
+	array<String^>^ temp = {"MATH003","MATH110","MATH115"}; 
+	excluded = temp;
+
 	// textBox
 	outputBox = textBox;
 	outputDelegate = gcnew setTextBoxText(this, &Worker::setTextBoxMethod);
@@ -57,21 +61,28 @@ void Worker::dropTables()
 {
 	outputBox->Invoke(outputDelegate, outputBox, "Dropping tables...");
 	sCom = sCon->CreateCommand();
-	sCom->CommandText = "DROP TABLE IF EXISTS raw_master;";
+
+	sCom = gcnew SQLiteCommand("BEGIN", sCon);
 	sCom->ExecuteNonQuery();
-	sCom->CommandText = "DROP TABLE IF EXISTS raw_audit;";
+
+	sCom = gcnew SQLiteCommand("DROP TABLE IF EXISTS raw_master;", sCon);
 	sCom->ExecuteNonQuery();
-	sCom->CommandText = "DROP TABLE IF EXISTS letterGrades;";
+	sCom = gcnew SQLiteCommand("DROP TABLE IF EXISTS raw_audit;", sCon);
 	sCom->ExecuteNonQuery();
-	sCom->CommandText = "DROP TABLE IF EXISTS audit;";
+	sCom = gcnew SQLiteCommand("DROP TABLE IF EXISTS letterGrades;", sCon);
 	sCom->ExecuteNonQuery();
-	sCom->CommandText = "DROP TABLE IF EXISTS master;";
+	sCom = gcnew SQLiteCommand("DROP TABLE IF EXISTS audit;", sCon);
 	sCom->ExecuteNonQuery();
-	sCom->CommandText = "DROP TABLE IF EXISTS standing;";
+	sCom = gcnew SQLiteCommand("DROP TABLE IF EXISTS master;", sCon);
 	sCom->ExecuteNonQuery();
-	sCom->CommandText = "DROP TABLE IF EXISTS needs;";
+	sCom = gcnew SQLiteCommand("DROP TABLE IF EXISTS standing;", sCon);
 	sCom->ExecuteNonQuery();
-	sCom->CommandText = "DROP TABLE IF EXISTS canTake;";
+	sCom = gcnew SQLiteCommand("DROP TABLE IF EXISTS needs;", sCon);
+	sCom->ExecuteNonQuery();
+	sCom = gcnew SQLiteCommand("DROP TABLE IF EXISTS canTake;", sCon);
+	sCom->ExecuteNonQuery();
+
+	sCom = gcnew SQLiteCommand("END", sCon);
 	sCom->ExecuteNonQuery();
 	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 }
@@ -284,6 +295,7 @@ void Worker::createCanTake()
 
 bool Worker::preReqs(String ^pre)
 {
+	bool pass = false;
 	array<String^> ^need;
 	need = pre->Split(',');
 
@@ -291,13 +303,22 @@ bool Worker::preReqs(String ^pre)
 	sCom->CommandText = "SELECT `prereq` FROM `master` WHERE `courseID` = \""+need[1]+"\";";
 	SQLiteDataReader ^reader = sCom->ExecuteReader();
 	String ^row;
+	Regex^ regex = gcnew Regex("[A-Z]{1,4}[0-9]{3}[A-Z]{0,2}", RegexOptions::IgnoreCase);
+	MatchCollection^ matches;
+	String ^current;
 	while(reader->Read())
     {
 		for(int col = 0; col < reader->FieldCount; ++col)
         {
 			row += reader->GetValue(col)->ToString();
+			matches = regex->Matches(row);
+			outputBox->Invoke(outputDelegate, outputBox, matches->Count+"\r\n");
+			for each (Match^ match in matches)
+			{
+				outputBox->Invoke(outputDelegate, outputBox, match->ToString()+"\r\n");
+			}
         }
-		outputBox->Invoke(outputDelegate, outputBox, need[1]+": "+reader->GetValue(0)->ToString()+"\r\n");
+		//outputBox->Invoke(outputDelegate, outputBox, need[1]+": "+reader->GetValue(0)->ToString()+"\r\n");
     }
 	return true;
 }
