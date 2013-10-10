@@ -297,6 +297,7 @@ bool Worker::preReqs(String ^pre)
 {
 	bool pass = false;
 	array<String^> ^need;
+	// need[0] = student ID, need[0] = course ID
 	need = pre->Split(',');
 
 	sCom = sCon->CreateCommand();
@@ -312,10 +313,26 @@ bool Worker::preReqs(String ^pre)
         {
 			row += reader->GetValue(col)->ToString();
 			matches = regex->Matches(row);
-			outputBox->Invoke(outputDelegate, outputBox, matches->Count+"\r\n");
+			//outputBox->Invoke(outputDelegate, outputBox, matches->Count+"\r\n");
 			for each (Match^ match in matches)
 			{
-				outputBox->Invoke(outputDelegate, outputBox, match->ToString()+"\r\n");
+				//outputBox->Invoke(outputDelegate, outputBox, match->ToString()+"\r\n");
+				sCom = sCon->CreateCommand();
+				sCom->CommandText = "SELECT `completionStatus` FROM `audit` WHERE `studentID` = \""+need[0]+"\" AND `courseID` = \""+match->ToString()+"\";";
+				SQLiteDataReader ^lookup = sCom->ExecuteReader();
+				if(lookup->HasRows == false)
+				{
+					outputBox->Invoke(outputDelegate, outputBox, need[0]+"("+need[1]+"):"+match->ToString()+" Not found!\r\n");
+				}
+				while(lookup->Read())
+				{
+					//outputBox->Invoke(outputDelegate, outputBox, lookup->FieldCount+"\r\n");
+					for(int i = 0; i < lookup->FieldCount; ++i)
+					{
+						current = lookup->GetValue(i)->ToString();
+						outputBox->Invoke(outputDelegate, outputBox, need[0]+"("+need[1]+"):"+match->ToString()+" = "+current+"\r\n");
+					}
+				}
 			}
         }
 		//outputBox->Invoke(outputDelegate, outputBox, need[1]+": "+reader->GetValue(0)->ToString()+"\r\n");
