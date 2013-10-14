@@ -279,6 +279,9 @@ void Worker::createCanTake()
 	sCom->CommandText = "SELECT `studentID`, `courseID` FROM `needs`;";
 	SQLiteDataReader ^reader = sCom->ExecuteReader();
 	String ^row;
+
+	sCom = gcnew SQLiteCommand("BEGIN", sCon);
+	sCom->ExecuteNonQuery(); 
 	while(reader->Read())
     {
 		for(int col = 0; col < reader->FieldCount; ++col)
@@ -287,9 +290,18 @@ void Worker::createCanTake()
 			if(col == 0)
 				row += ",";
         }
-		this->preReqs(row);
+		if(this->preReqs(row))
+		{
+			array<String^> ^take;
+			// take[0] = student ID, take[1] = course ID
+			take = row->Split(',');
+			sCom = gcnew SQLiteCommand("INSERT INTO canTake VALUES('"+take[0]+"', '"+take[1]+"');", sCon);
+			sCom->ExecuteNonQuery();
+		}
 		row = "";
     }
+	sCom = gcnew SQLiteCommand("END", sCon);
+	sCom->ExecuteNonQuery();
 	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 }
 
@@ -297,45 +309,57 @@ bool Worker::preReqs(String ^pre)
 {
 	bool pass = false;
 	array<String^> ^need;
-	// need[0] = student ID, need[0] = course ID
+	// need[0] = student ID, need[1] = course ID
 	need = pre->Split(',');
 
 	sCom = sCon->CreateCommand();
 	sCom->CommandText = "SELECT `prereq` FROM `master` WHERE `courseID` = \""+need[1]+"\";";
 	SQLiteDataReader ^reader = sCom->ExecuteReader();
 	String ^row;
+	array<String^> ^formula;
 	Regex^ regex = gcnew Regex("[A-Z]{1,4}[0-9]{3}[A-Z]{0,2}", RegexOptions::IgnoreCase);
 	MatchCollection^ matches;
-	String ^current;
+	String ^status;
 	while(reader->Read())
     {
 		for(int col = 0; col < reader->FieldCount; ++col)
         {
 			row += reader->GetValue(col)->ToString();
+			//row = row->Replace("AND", "&");
+			//row = row->Replace("OR", "|");
+			//formula = row->Split('a');
 			matches = regex->Matches(row);
-			//outputBox->Invoke(outputDelegate, outputBox, matches->Count+"\r\n");
+			outputBox->Invoke(outputDelegate, outputBox, need[1]+" needs: "+row+"\r\n");
 			for each (Match^ match in matches)
 			{
+				for each (String ^s in excluded)
+				{
+					if(s->Contains(match->ToString()))
+					{
+						return true;
+					}
+				}
 				//outputBox->Invoke(outputDelegate, outputBox, match->ToString()+"\r\n");
 				sCom = sCon->CreateCommand();
 				sCom->CommandText = "SELECT `completionStatus` FROM `audit` WHERE `studentID` = \""+need[0]+"\" AND `courseID` = \""+match->ToString()+"\";";
 				SQLiteDataReader ^lookup = sCom->ExecuteReader();
 				if(lookup->HasRows == false)
 				{
-					outputBox->Invoke(outputDelegate, outputBox, need[0]+"("+need[1]+"):"+match->ToString()+" Not found!\r\n");
+					//outputBox->Invoke(outputDelegate, outputBox, need[0]+"("+need[1]+"):"+match->ToString()+" Not found!\r\n");
 				}
 				while(lookup->Read())
 				{
 					//outputBox->Invoke(outputDelegate, outputBox, lookup->FieldCount+"\r\n");
 					for(int i = 0; i < lookup->FieldCount; ++i)
 					{
-						current = lookup->GetValue(i)->ToString();
-						outputBox->Invoke(outputDelegate, outputBox, need[0]+"("+need[1]+"):"+match->ToString()+" = "+current+"\r\n");
+						status = lookup->GetValue(i)->ToString();
+						outputBox->Invoke(outputDelegate, outputBox, need[0]+"("+need[1]+"):"+match->ToString()+" = "+status+"\r\n");
+						return true;
 					}
 				}
 			}
         }
 		//outputBox->Invoke(outputDelegate, outputBox, need[1]+": "+reader->GetValue(0)->ToString()+"\r\n");
     }
-	return true;
+	//return true;
 }
