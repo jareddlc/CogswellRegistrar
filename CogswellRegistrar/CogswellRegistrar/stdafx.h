@@ -6,6 +6,7 @@
 // TODO: reference additional headers your program requires here
 #include <String>
 #include <Windows.h>
+#include <cliext\vector>
 using namespace System;
 using namespace System::ComponentModel;
 using namespace System::Collections;

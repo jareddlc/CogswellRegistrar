@@ -316,30 +316,28 @@ bool Worker::preReqs(String ^pre)
 	sCom->CommandText = "SELECT `prereq` FROM `master` WHERE `courseID` = \""+need[1]+"\";";
 	SQLiteDataReader ^reader = sCom->ExecuteReader();
 	String ^row;
-	array<String^> ^formula;
 	Regex^ regex = gcnew Regex("[A-Z]{1,4}[0-9]{3}[A-Z]{0,2}", RegexOptions::IgnoreCase);
 	MatchCollection^ matches;
 	String ^status;
+	cliext::vector<String ^> courses;
 	while(reader->Read())
     {
 		for(int col = 0; col < reader->FieldCount; ++col)
         {
 			row += reader->GetValue(col)->ToString();
-			//row = row->Replace("AND", "&");
-			//row = row->Replace("OR", "|");
-			//formula = row->Split('a');
 			matches = regex->Matches(row);
-			outputBox->Invoke(outputDelegate, outputBox, need[1]+" needs: "+row+"\r\n");
+			//outputBox->Invoke(outputDelegate, outputBox, need[1]+" needs: "+row+"\r\n");
+			//outputBox->Invoke(outputDelegate, outputBox, matches->Count+"\r\n");
 			for each (Match^ match in matches)
 			{
+				//outputBox->Invoke(outputDelegate, outputBox, match->ToString()+"\r\n");
 				for each (String ^s in excluded)
 				{
 					if(s->Contains(match->ToString()))
 					{
-						return true;
+						//return true;
 					}
-				}
-				//outputBox->Invoke(outputDelegate, outputBox, match->ToString()+"\r\n");
+				}				
 				sCom = sCon->CreateCommand();
 				sCom->CommandText = "SELECT `completionStatus` FROM `audit` WHERE `studentID` = \""+need[0]+"\" AND `courseID` = \""+match->ToString()+"\";";
 				SQLiteDataReader ^lookup = sCom->ExecuteReader();
@@ -353,13 +351,46 @@ bool Worker::preReqs(String ^pre)
 					for(int i = 0; i < lookup->FieldCount; ++i)
 					{
 						status = lookup->GetValue(i)->ToString();
-						outputBox->Invoke(outputDelegate, outputBox, need[0]+"("+need[1]+"):"+match->ToString()+" = "+status+"\r\n");
-						return true;
+						//outputBox->Invoke(outputDelegate, outputBox, need[0]+"("+need[1]+"):"+match->ToString()+" = "+status+"\r\n");
+						courses.push_back(match->ToString()+","+status);
+						//return true;
 					}
 				}
 			}
+			// check vector
+			for(int i = 0; i < courses.size(); i++)
+			{
+				//outputBox->Invoke(outputDelegate, outputBox, courses.at(i)+"\r\n");
+
+				bool complete = false;
+				array<String^> ^temp; // temp[0] = course, temp[1] = completion status
+				temp = courses.at(i)->Split(',');
+		
+				// do we have atleast one pass course?
+				if(temp[1] == "TC" || temp[1] == "C" || temp[1] == "E")
+				{
+					complete = true;
+				}
+		
+				// last loop
+				if(i == courses.size()-1)
+				{
+					if(complete == true)
+					{
+						outputBox->Invoke(outputDelegate, outputBox, need[1]+" needs: "+row+"\r\n");
+						//outputBox->Invoke(outputDelegate, outputBox, "we have one passed course\r\n");
+						return true;
+					}
+					else
+					{
+						//outputBox->Invoke(outputDelegate, outputBox, need[1]+" needs: "+row+"\r\n");
+						//outputBox->Invoke(outputDelegate, outputBox, "all the courses are not met\r\n");
+						return false;
+					}
+				}
+			}	
         }
 		//outputBox->Invoke(outputDelegate, outputBox, need[1]+": "+reader->GetValue(0)->ToString()+"\r\n");
-    }
-	//return true;
+    } 
+	
 }
