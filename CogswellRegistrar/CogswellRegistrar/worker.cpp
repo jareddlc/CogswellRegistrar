@@ -357,10 +357,12 @@ bool Worker::preReqs(String ^pre)
 					}
 				}
 			}
+			this->parsePreReq(row);
 			// check vector
+
 			for(int i = 0; i < courses.size(); i++)
 			{
-				//outputBox->Invoke(outputDelegate, outputBox, courses.at(i)+"\r\n");
+				//outputBox->Invoke(outputDelegate, outputBox, courses.at(i)+" "+i+"\r\n");
 
 				bool complete = false;
 				array<String^> ^temp; // temp[0] = course, temp[1] = completion status
@@ -377,13 +379,13 @@ bool Worker::preReqs(String ^pre)
 				{
 					if(complete == true)
 					{
-						outputBox->Invoke(outputDelegate, outputBox, need[1]+" needs: "+row+"\r\n");
+						//outputBox->Invoke(outputDelegate, outputBox, need[1]+" needs: "+row+"\r\n");
 						//outputBox->Invoke(outputDelegate, outputBox, "we have one passed course\r\n");
 						return true;
 					}
 					else
 					{
-						//outputBox->Invoke(outputDelegate, outputBox, need[1]+" needs: "+row+"\r\n");
+						//outputBox->Invoke(outputDelegate, outputBox, need[1]+" failed: "+row+"\r\n");
 						//outputBox->Invoke(outputDelegate, outputBox, "all the courses are not met\r\n");
 						return false;
 					}
@@ -393,4 +395,43 @@ bool Worker::preReqs(String ^pre)
 		//outputBox->Invoke(outputDelegate, outputBox, need[1]+": "+reader->GetValue(0)->ToString()+"\r\n");
     } 
 	
+}
+
+void Worker::parsePreReq(String ^formula)
+{
+	String ^temp;
+	Stack^ stack = gcnew Stack;
+	Regex^ and = gcnew Regex("AND", RegexOptions::IgnoreCase);
+	Regex^ or = gcnew Regex("OR", RegexOptions::IgnoreCase);
+
+	MatchCollection^ matches;
+	bool p = false;
+	outputBox->Invoke(outputDelegate, outputBox, "\r\n"+formula+" = FORMULA\r\n");
+	for(int i = 0; i < formula->Length; i++)
+	{
+		if(i == formula->Length-1)
+		{
+			temp += formula[i];
+			stack->Push(temp);
+			outputBox->Invoke(outputDelegate, outputBox, temp+"\r\n");
+			temp = "";
+		}
+		if(formula[i] == ' ')
+		{
+			stack->Push(temp);
+			outputBox->Invoke(outputDelegate, outputBox, temp+"\r\n");
+			temp = "";
+		}
+		else
+		{
+			temp += formula[i];
+		}
+	}
+	/*
+	matches = and->Matches(formula);
+	outputBox->Invoke(outputDelegate, outputBox, matches->Count+": AND\r\n");
+
+	matches = or->Matches(formula);
+	outputBox->Invoke(outputDelegate, outputBox, matches->Count+": OR\r\n");
+	*/
 }

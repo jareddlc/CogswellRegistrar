@@ -24,4 +24,5 @@ public:
 	void createNeeds();
 	void createCanTake();
 	bool preReqs(String ^);
+	void parsePreReq(String ^);
 };
