@@ -401,25 +401,37 @@ void Worker::parsePreReq(String ^formula)
 {
 	String ^temp;
 	Stack^ stack = gcnew Stack;
-	Regex^ and = gcnew Regex("AND", RegexOptions::IgnoreCase);
-	Regex^ or = gcnew Regex("OR", RegexOptions::IgnoreCase);
 
-	MatchCollection^ matches;
 	bool p = false;
-	outputBox->Invoke(outputDelegate, outputBox, "\r\n"+formula+" = FORMULA\r\n");
+	//outputBox->Invoke(outputDelegate, outputBox, "\r\n"+formula+" = FORMULA\r\n");
 	for(int i = 0; i < formula->Length; i++)
 	{
-		if(i == formula->Length-1)
+		// end of formula
+		
+		if(formula[i] == '(')
+		{
+			stack->Push("(");
+		}
+		else if(formula[i] == ')')
+		{
+			stack->Push(temp);
+			stack->Push(")");
+			temp = "";
+		}
+		else if(formula[i] == ' ')
+		{
+			if(temp != "")
+			{
+				stack->Push(temp);
+			}
+			//outputBox->Invoke(outputDelegate, outputBox, temp+"\r\n");
+			temp = "";
+		}
+		else if(i == formula->Length-1)
 		{
 			temp += formula[i];
 			stack->Push(temp);
-			outputBox->Invoke(outputDelegate, outputBox, temp+"\r\n");
-			temp = "";
-		}
-		if(formula[i] == ' ')
-		{
-			stack->Push(temp);
-			outputBox->Invoke(outputDelegate, outputBox, temp+"\r\n");
+			//outputBox->Invoke(outputDelegate, outputBox, temp+"\r\n");
 			temp = "";
 		}
 		else
@@ -427,11 +439,8 @@ void Worker::parsePreReq(String ^formula)
 			temp += formula[i];
 		}
 	}
-	/*
-	matches = and->Matches(formula);
-	outputBox->Invoke(outputDelegate, outputBox, matches->Count+": AND\r\n");
-
-	matches = or->Matches(formula);
-	outputBox->Invoke(outputDelegate, outputBox, matches->Count+": OR\r\n");
-	*/
+	for(int j = 0; j = stack->Count; j++)
+	{
+		outputBox->Invoke(outputDelegate, outputBox, stack->Pop()+"\r\n");
+	}
 }
