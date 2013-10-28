@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "worker.h"
 
-Worker::Worker(TextBox ^textBox, String ^audit, String ^master) {
+Worker::Worker(TextBox ^textBox, String ^audit, String ^master)
+{
 	// excluded list
 	array<String^>^ temp = {"MATH003","MATH110","MATH115"}; 
 	excluded = temp;
@@ -11,20 +12,20 @@ Worker::Worker(TextBox ^textBox, String ^audit, String ^master) {
 	outputDelegate = gcnew setTextBoxText(this, &Worker::setTextBoxMethod);
 	outputBox->Invoke(outputDelegate, outputBox, "Initializing...");
 
-	// file
+	// input files
 	this->file_audit = audit;
 	this->file_master = master;
 
-	// sCom
-	this->sCom = (gcnew SQLiteCommand());
-	this->sCom->CommandText = nullptr;
+	// database queries
+	this->dbQuery = (gcnew SQLiteCommand());
+	this->dbQuery->CommandText = nullptr;
 
-	// sCon
-	this->sCon = (gcnew SQLiteConnection());
-	this->sCon->ConnectionString = L"Data Source=Students.db";
-	this->sCon->DefaultTimeout = 30;
-	this->sCon->Flags = static_cast<SQLiteConnectionFlags>((SQLiteConnectionFlags::LogCallbackException | SQLiteConnectionFlags::LogModuleException));
-	this->sCon->ParseViaFramework = false;
+	// database connection
+	this->dbConnection = (gcnew SQLiteConnection());
+	this->dbConnection->ConnectionString = L"Data Source=Students.db";
+	this->dbConnection->DefaultTimeout = 30;
+	this->dbConnection->Flags = static_cast<SQLiteConnectionFlags>((SQLiteConnectionFlags::LogCallbackException | SQLiteConnectionFlags::LogModuleException));
+	this->dbConnection->ParseViaFramework = false;
 
 	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 }
@@ -37,21 +38,35 @@ void Worker::setTextBoxMethod(System::Windows::Forms::TextBox ^T, String ^str)
 void Worker::Work()
 {
 	outputBox->Invoke(outputDelegate, outputBox, "Connecting to Students.db...");
-	sCon->Open();
+	dbConnection->Open();
 	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 
+	outputBox->Invoke(outputDelegate, outputBox, "Dropping tables...");
 	this->dropTables();
+	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
+
+	outputBox->Invoke(outputDelegate, outputBox, "Creating raw_audit table...");
 	this->insertAudit();
+	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
+
+
 	this->insertMaster();
+
+	outputBox->Invoke(outputDelegate, outputBox, "Creating letterGrades table...");
 	this->createLetterGrades();
+
 	this->createAudit();
+
 	this->createMaster();
+
 	this->createStanding();
+
 	this->createNeeds();
+
 	this->createCanTake();
 
 	outputBox->Invoke(outputDelegate, outputBox, "Closing Students.db...");
-	sCon->Close();
+	dbConnection->Close();
 	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 
 	outputBox->Invoke(outputDelegate, outputBox, "Process complete.\r\n");
@@ -59,84 +74,80 @@ void Worker::Work()
 
 void Worker::dropTables()
 {
-	outputBox->Invoke(outputDelegate, outputBox, "Dropping tables...");
-	sCom = sCon->CreateCommand();
+	dbQuery = dbConnection->CreateCommand();
 
-	sCom = gcnew SQLiteCommand("BEGIN", sCon);
-	sCom->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("BEGIN", dbConnection);
+	dbQuery->ExecuteNonQuery();
 
-	sCom = gcnew SQLiteCommand("DROP TABLE IF EXISTS raw_master;", sCon);
-	sCom->ExecuteNonQuery();
-	sCom = gcnew SQLiteCommand("DROP TABLE IF EXISTS raw_audit;", sCon);
-	sCom->ExecuteNonQuery();
-	sCom = gcnew SQLiteCommand("DROP TABLE IF EXISTS letterGrades;", sCon);
-	sCom->ExecuteNonQuery();
-	sCom = gcnew SQLiteCommand("DROP TABLE IF EXISTS audit;", sCon);
-	sCom->ExecuteNonQuery();
-	sCom = gcnew SQLiteCommand("DROP TABLE IF EXISTS master;", sCon);
-	sCom->ExecuteNonQuery();
-	sCom = gcnew SQLiteCommand("DROP TABLE IF EXISTS standing;", sCon);
-	sCom->ExecuteNonQuery();
-	sCom = gcnew SQLiteCommand("DROP TABLE IF EXISTS needs;", sCon);
-	sCom->ExecuteNonQuery();
-	sCom = gcnew SQLiteCommand("DROP TABLE IF EXISTS canTake;", sCon);
-	sCom->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("DROP TABLE IF EXISTS raw_master;", dbConnection);
+	dbQuery->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("DROP TABLE IF EXISTS raw_audit;", dbConnection);
+	dbQuery->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("DROP TABLE IF EXISTS letterGrades;", dbConnection);
+	dbQuery->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("DROP TABLE IF EXISTS audit;", dbConnection);
+	dbQuery->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("DROP TABLE IF EXISTS master;", dbConnection);
+	dbQuery->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("DROP TABLE IF EXISTS standing;", dbConnection);
+	dbQuery->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("DROP TABLE IF EXISTS needs;", dbConnection);
+	dbQuery->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("DROP TABLE IF EXISTS canTake;", dbConnection);
+	dbQuery->ExecuteNonQuery();
 
-	sCom = gcnew SQLiteCommand("END", sCon);
-	sCom->ExecuteNonQuery();
-	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
+	dbQuery = gcnew SQLiteCommand("END", dbConnection);
+	dbQuery->ExecuteNonQuery();
 }
 
 void Worker::createLetterGrades()
 {
-	outputBox->Invoke(outputDelegate, outputBox, "Creating letterGrades table...");
-	sCom = sCon->CreateCommand();
-	sCom->CommandText = "CREATE TABLE letterGrades (`letter` varchar(2) not null, `number` decimal(2,1) not null, primary key (`letter`, `number`));";
-	sCom->ExecuteNonQuery();
+	dbQuery = dbConnection->CreateCommand();
+	dbQuery->CommandText = "CREATE TABLE letterGrades (`letter` varchar(2) not null, `number` decimal(2,1) not null, primary key (`letter`, `number`));";
+	dbQuery->ExecuteNonQuery();
 
-	sCom = gcnew SQLiteCommand("BEGIN", sCon);
-	sCom->ExecuteNonQuery(); 
-	sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('A+', '4.0');", sCon);
-	sCom->ExecuteNonQuery();
-	sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('A', '4.0');", sCon);
-	sCom->ExecuteNonQuery();
-	sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('A-', '3.7');", sCon);
-	sCom->ExecuteNonQuery();
-	sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('B+', '3.3');", sCon);
-	sCom->ExecuteNonQuery();
-	sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('B', '3.0');", sCon);
-	sCom->ExecuteNonQuery();
-	sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('B-', '2.7');", sCon);
-	sCom->ExecuteNonQuery();
-	sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('C+', '2.3');", sCon);
-	sCom->ExecuteNonQuery();
-	sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('C', '2.0');", sCon);
-	sCom->ExecuteNonQuery();
-	sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('C-', '1.7');", sCon);
-	sCom->ExecuteNonQuery();
-	sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('D+', '1.3');", sCon);
-	sCom->ExecuteNonQuery();
-	sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('D', '1.0');", sCon);
-	sCom->ExecuteNonQuery();
-	sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('D-', '0.0');", sCon);
-	sCom->ExecuteNonQuery();
-	sCom = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('F', '0.0');", sCon);
-	sCom->ExecuteNonQuery();
-	sCom = gcnew SQLiteCommand("END", sCon);
-	sCom->ExecuteNonQuery();
-	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
+	dbQuery = gcnew SQLiteCommand("BEGIN", dbConnection);
+	dbQuery->ExecuteNonQuery(); 
+	dbQuery = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('A+', '4.0');", dbConnection);
+	dbQuery->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('A', '4.0');", dbConnection);
+	dbQuery->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('A-', '3.7');", dbConnection);
+	dbQuery->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('B+', '3.3');", dbConnection);
+	dbQuery->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('B', '3.0');", dbConnection);
+	dbQuery->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('B-', '2.7');", dbConnection);
+	dbQuery->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('C+', '2.3');", dbConnection);
+	dbQuery->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('C', '2.0');", dbConnection);
+	dbQuery->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('C-', '1.7');", dbConnection);
+	dbQuery->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('D+', '1.3');", dbConnection);
+	dbQuery->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('D', '1.0');", dbConnection);
+	dbQuery->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('D-', '0.0');", dbConnection);
+	dbQuery->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('F', '0.0');", dbConnection);
+	dbQuery->ExecuteNonQuery();
+
+	dbQuery = gcnew SQLiteCommand("END", dbConnection);
+	dbQuery->ExecuteNonQuery();
 }
 
 void Worker::insertAudit()
 {
 	int numRows = 0;
-	outputBox->Invoke(outputDelegate, outputBox, "Creating raw_audit table...");
-	sCom = sCon->CreateCommand();
-	sCom->CommandText = "CREATE TABLE raw_audit (`studentInfo` text, `courseID` text, `courseDesc` text, `letterGrade` text, `completionStatus` text);";
-	sCom->ExecuteNonQuery();
+	dbQuery = dbConnection->CreateCommand();
+	dbQuery->CommandText = "CREATE TABLE raw_audit (`studentInfo` text, `courseID` text, `courseDesc` text, `letterGrade` text, `completionStatus` text);";
+	dbQuery->ExecuteNonQuery();
 	//SQLite Defer for large insertion
-	sCom = gcnew SQLiteCommand("BEGIN", sCon);
-	sCom->ExecuteNonQuery();
+	dbQuery = gcnew SQLiteCommand("BEGIN", dbConnection);
+	dbQuery->ExecuteNonQuery();
 	Regex^ regex = gcnew Regex("^[A][0-9]{10}$", RegexOptions::IgnoreCase);
 	Match^ match;
 	try 
@@ -160,13 +171,13 @@ void Worker::insertAudit()
 				temp[0] = id;
 				if(temp->Length >= 6)
 				{
-					sCom = gcnew SQLiteCommand("INSERT INTO raw_audit VALUES('"+temp[0]+"', '"+temp[1]+"', '"+temp[2]+"', '"+temp[5]+"', '"+temp[7]+"');", sCon);
-					sCom->ExecuteNonQuery();
+					dbQuery = gcnew SQLiteCommand("INSERT INTO raw_audit VALUES('"+temp[0]+"', '"+temp[1]+"', '"+temp[2]+"', '"+temp[5]+"', '"+temp[7]+"');", dbConnection);
+					dbQuery->ExecuteNonQuery();
 				}
 			}
 			//SQLite perform insertion
-			sCom = gcnew SQLiteCommand("END", sCon);
-			sCom->ExecuteNonQuery();
+			dbQuery = gcnew SQLiteCommand("END", dbConnection);
+			dbQuery->ExecuteNonQuery();
 			outputBox->Invoke(outputDelegate, outputBox, "Inserted: "+numRows+". ");
 		}
 		finally
@@ -182,19 +193,17 @@ void Worker::insertAudit()
 		outputBox->Invoke(outputDelegate, outputBox, "Error at:"+numRows+"\r\n");
 		outputBox->Invoke(outputDelegate, outputBox, e->Message);
 	}
-	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 }
 
 void Worker::insertMaster()
 {
 	int numRows = 0;
-	outputBox->Invoke(outputDelegate, outputBox, "Creating raw_master table...");
-	sCom = sCon->CreateCommand();
-	sCom->CommandText = "CREATE TABLE raw_master (`courseID` text, `credits` text, `prereq` text, `coreq` text);";
-	sCom->ExecuteNonQuery();
+	dbQuery = dbConnection->CreateCommand();
+	dbQuery->CommandText = "CREATE TABLE raw_master (`courseID` text, `credits` text, `prereq` text, `coreq` text);";
+	dbQuery->ExecuteNonQuery();
 	//SQLite Defer for large insertion
-	sCom = gcnew SQLiteCommand("BEGIN", sCon);
-	sCom->ExecuteNonQuery(); 
+	dbQuery = gcnew SQLiteCommand("BEGIN", dbConnection);
+	dbQuery->ExecuteNonQuery(); 
 	try 
 	{
 		StreamReader^ sr = gcnew StreamReader(this->file_master);
@@ -208,13 +217,13 @@ void Worker::insertMaster()
 				temp = line->Split(',');
 				if(temp->Length >= 14)
 				{
-					sCom = gcnew SQLiteCommand("INSERT INTO raw_master VALUES('"+temp[0]+"', '"+temp[1]+"', '"+temp[3]+"', '"+temp[4]+"');", sCon);
-					sCom->ExecuteNonQuery();
+					dbQuery = gcnew SQLiteCommand("INSERT INTO raw_master VALUES('"+temp[0]+"', '"+temp[1]+"', '"+temp[3]+"', '"+temp[4]+"');", dbConnection);
+					dbQuery->ExecuteNonQuery();
 				}
 			}
 			//SQLite perform insertion
-			sCom = gcnew SQLiteCommand("END", sCon);
-			sCom->ExecuteNonQuery();
+			dbQuery = gcnew SQLiteCommand("END", dbConnection);
+			dbQuery->ExecuteNonQuery();
 			outputBox->Invoke(outputDelegate, outputBox, "Inserted: "+numRows+". ");
 		}
 		finally
@@ -230,58 +239,48 @@ void Worker::insertMaster()
 		outputBox->Invoke(outputDelegate, outputBox, "Error at:"+numRows+"\r\n");
 		outputBox->Invoke(outputDelegate, outputBox, e->Message);
 	}
-	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 }
 
 void Worker::createAudit()
 {
-	outputBox->Invoke(outputDelegate, outputBox, "Creating audit table...");
-	sCom = sCon->CreateCommand();
-	sCom->CommandText = "CREATE TABLE audit AS select `studentInfo` AS `studentID`, `courseID`, `completionStatus`, `number` AS `numericalGrade` FROM `raw_audit` left join `letterGrades` on `letterGrade` = `letter`	WHERE `courseID` != '';";
-	sCom->ExecuteNonQuery();
-	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
+	dbQuery = dbConnection->CreateCommand();
+	dbQuery->CommandText = "CREATE TABLE audit AS select `studentInfo` AS `studentID`, `courseID`, `completionStatus`, `number` AS `numericalGrade` FROM `raw_audit` left join `letterGrades` on `letterGrade` = `letter`	WHERE `courseID` != '';";
+	dbQuery->ExecuteNonQuery();
 }
 
 void Worker::createMaster()
 {
-	outputBox->Invoke(outputDelegate, outputBox, "Creating master table...");
-	sCom = sCon->CreateCommand();
-	sCom->CommandText = "CREATE TABLE master AS select * FROM (select replace(`courseID`,' ', '') AS `courseID`, `prereq` FROM `raw_master`) ";
-	sCom->ExecuteNonQuery();
-	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
+	dbQuery = dbConnection->CreateCommand();
+	dbQuery->CommandText = "CREATE TABLE master AS select * FROM (select replace(`courseID`,' ', '') AS `courseID`, `prereq` FROM `raw_master`) ";
+	dbQuery->ExecuteNonQuery();
 }
 
 void Worker::createStanding()
 {
-	outputBox->Invoke(outputDelegate, outputBox, "Creating standing table...");
-	sCom = sCon->CreateCommand();
-	sCom->CommandText = "CREATE TABLE `standing` AS select distinct `studentID`, 'Senior' AS `collegeLevel` FROM `audit`";
-	sCom->ExecuteNonQuery();
-	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
+	dbQuery = dbConnection->CreateCommand();
+	dbQuery->CommandText = "CREATE TABLE `standing` AS select distinct `studentID`, 'Senior' AS `collegeLevel` FROM `audit`";
+	dbQuery->ExecuteNonQuery();
 }
 
 void Worker::createNeeds()
 {
-	outputBox->Invoke(outputDelegate, outputBox, "Creating needs table...");
-	sCom = sCon->CreateCommand();
-	sCom->CommandText = "CREATE TABLE `needs` AS select `studentID`, `courseID` FROM `audit` WHERE `completionStatus` = 'R'";
-	sCom->ExecuteNonQuery();
-	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
+	dbQuery = dbConnection->CreateCommand();
+	dbQuery->CommandText = "CREATE TABLE `needs` AS select `studentID`, `courseID` FROM `audit` WHERE `completionStatus` = 'R'";
+	dbQuery->ExecuteNonQuery();
 }
 
 void Worker::createCanTake()
 {
-	outputBox->Invoke(outputDelegate, outputBox, "Creating canTake table...");
-	sCom = sCon->CreateCommand();
-	sCom->CommandText = "CREATE TABLE canTake ( `StudentID`  text, `CourseID` text)";
-	sCom->ExecuteNonQuery();
+	dbQuery = dbConnection->CreateCommand();
+	dbQuery->CommandText = "CREATE TABLE canTake ( `StudentID`  text, `CourseID` text)";
+	dbQuery->ExecuteNonQuery();
 
-	sCom->CommandText = "SELECT `studentID`, `courseID` FROM `needs`;";
-	SQLiteDataReader ^reader = sCom->ExecuteReader();
+	dbQuery->CommandText = "SELECT `studentID`, `courseID` FROM `needs`;";
+	SQLiteDataReader ^reader = dbQuery->ExecuteReader();
 	String ^row;
 
-	sCom = gcnew SQLiteCommand("BEGIN", sCon);
-	sCom->ExecuteNonQuery(); 
+	dbQuery = gcnew SQLiteCommand("BEGIN", dbConnection);
+	dbQuery->ExecuteNonQuery(); 
 	while(reader->Read())
     {
 		for(int col = 0; col < reader->FieldCount; ++col)
@@ -295,14 +294,13 @@ void Worker::createCanTake()
 			array<String^> ^take;
 			// take[0] = student ID, take[1] = course ID
 			take = row->Split(',');
-			sCom = gcnew SQLiteCommand("INSERT INTO canTake VALUES('"+take[0]+"', '"+take[1]+"');", sCon);
-			sCom->ExecuteNonQuery();
+			dbQuery = gcnew SQLiteCommand("INSERT INTO canTake VALUES('"+take[0]+"', '"+take[1]+"');", dbConnection);
+			dbQuery->ExecuteNonQuery();
 		}
 		row = "";
     }
-	sCom = gcnew SQLiteCommand("END", sCon);
-	sCom->ExecuteNonQuery();
-	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
+	dbQuery = gcnew SQLiteCommand("END", dbConnection);
+	dbQuery->ExecuteNonQuery();
 }
 
 bool Worker::preReqs(String ^pre)
@@ -312,14 +310,15 @@ bool Worker::preReqs(String ^pre)
 	// need[0] = student ID, need[1] = course ID
 	need = pre->Split(',');
 
-	sCom = sCon->CreateCommand();
-	sCom->CommandText = "SELECT `prereq` FROM `master` WHERE `courseID` = \""+need[1]+"\";";
-	SQLiteDataReader ^reader = sCom->ExecuteReader();
+	dbQuery = dbConnection->CreateCommand();
+	dbQuery->CommandText = "SELECT `prereq` FROM `master` WHERE `courseID` = \""+need[1]+"\";";
+	SQLiteDataReader ^reader = dbQuery->ExecuteReader();
 	String ^row;
 	Regex^ regex = gcnew Regex("[A-Z]{1,4}[0-9]{3}[A-Z]{0,2}", RegexOptions::IgnoreCase);
 	MatchCollection^ matches;
 	String ^status;
-	cliext::vector<String ^> courses;
+	cliext::vector<String^> courses;
+	cliext::vector<String^> formula;
 	while(reader->Read())
     {
 		for(int col = 0; col < reader->FieldCount; ++col)
@@ -338,9 +337,9 @@ bool Worker::preReqs(String ^pre)
 						//return true;
 					}
 				}				
-				sCom = sCon->CreateCommand();
-				sCom->CommandText = "SELECT `completionStatus` FROM `audit` WHERE `studentID` = \""+need[0]+"\" AND `courseID` = \""+match->ToString()+"\";";
-				SQLiteDataReader ^lookup = sCom->ExecuteReader();
+				dbQuery = dbConnection->CreateCommand();
+				dbQuery->CommandText = "SELECT `completionStatus` FROM `audit` WHERE `studentID` = \""+need[0]+"\" AND `courseID` = \""+match->ToString()+"\";";
+				SQLiteDataReader ^lookup = dbQuery->ExecuteReader();
 				if(lookup->HasRows == false)
 				{
 					//outputBox->Invoke(outputDelegate, outputBox, need[0]+"("+need[1]+"):"+match->ToString()+" Not found!\r\n");
@@ -357,8 +356,22 @@ bool Worker::preReqs(String ^pre)
 					}
 				}
 			}
-			this->parsePreReq(row);
-			// check vector
+			// Do the logic
+			formula = this->parsePreReq(row);
+
+			int paren = 0;
+			int j = 0;
+			for(int i = 0; i < formula.size(); i++)
+			{
+				if(formula.at(i) == "(")
+				{
+					paren += 1;
+				}
+				if(formula.at(i) == ")")
+				{
+					paren -= 1;
+				}
+			}
 
 			for(int i = 0; i < courses.size(); i++)
 			{
@@ -397,32 +410,30 @@ bool Worker::preReqs(String ^pre)
 	
 }
 
-void Worker::parsePreReq(String ^formula)
+cliext::vector<String^> Worker::parsePreReq(String ^formula)
 {
 	String ^temp;
-	Stack^ stack = gcnew Stack;
-
-	bool p = false;
+	cliext::vector<String^> stack;
+	
 	//outputBox->Invoke(outputDelegate, outputBox, "\r\n"+formula+" = FORMULA\r\n");
 	for(int i = 0; i < formula->Length; i++)
 	{
 		// end of formula
-		
 		if(formula[i] == '(')
 		{
-			stack->Push("(");
+			stack.push_back("(");
 		}
 		else if(formula[i] == ')')
 		{
-			stack->Push(temp);
-			stack->Push(")");
+			stack.push_back(temp);
+			stack.push_back(")");
 			temp = "";
 		}
 		else if(formula[i] == ' ')
 		{
 			if(temp != "")
 			{
-				stack->Push(temp);
+				stack.push_back(temp);
 			}
 			//outputBox->Invoke(outputDelegate, outputBox, temp+"\r\n");
 			temp = "";
@@ -430,7 +441,7 @@ void Worker::parsePreReq(String ^formula)
 		else if(i == formula->Length-1)
 		{
 			temp += formula[i];
-			stack->Push(temp);
+			stack.push_back(temp);
 			//outputBox->Invoke(outputDelegate, outputBox, temp+"\r\n");
 			temp = "";
 		}
@@ -439,8 +450,6 @@ void Worker::parsePreReq(String ^formula)
 			temp += formula[i];
 		}
 	}
-	for(int j = 0; j = stack->Count; j++)
-	{
-		outputBox->Invoke(outputDelegate, outputBox, stack->Pop()+"\r\n");
-	}
+
+	return stack;
 }
