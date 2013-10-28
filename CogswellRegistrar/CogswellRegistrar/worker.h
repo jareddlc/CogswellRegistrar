@@ -8,7 +8,6 @@ ref class Worker {
 	TextBox^ outputBox;
 	delegate void setTextBoxText(TextBox^, String^);
 	setTextBoxText^ outputDelegate;
-	array<String^>^ excluded;
 	cliext::vector<String^> init; // init vector becauase visual c++ is dumb
 	
 public:
@@ -16,14 +15,10 @@ public:
 	void Work();
 	void setTextBoxMethod(TextBox^, String^);
 	void dropTables();
+	void createTables();
 	void insertAudit();
 	void insertMaster();
-	void createLetterGrades();
-	void createAudit();
-	void createMaster();
-	void createStanding();
-	void createNeeds();
 	void createCanTake();
 	bool preReqs(String^);
-	cliext::vector<String^> parsePreReq(String^);
+	cliext::vector<String^> parseFormula(String^);
 };

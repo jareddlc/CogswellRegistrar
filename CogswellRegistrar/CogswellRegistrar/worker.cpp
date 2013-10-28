@@ -3,10 +3,6 @@
 
 Worker::Worker(TextBox ^textBox, String ^audit, String ^master)
 {
-	// excluded list
-	array<String^>^ temp = {"MATH003","MATH110","MATH115"}; 
-	excluded = temp;
-
 	// textBox
 	outputBox = textBox;
 	outputDelegate = gcnew setTextBoxText(this, &Worker::setTextBoxMethod);
@@ -45,25 +41,18 @@ void Worker::Work()
 	this->dropTables();
 	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 
-	outputBox->Invoke(outputDelegate, outputBox, "Creating raw_audit table...");
+	outputBox->Invoke(outputDelegate, outputBox, "Inserting data...");
 	this->insertAudit();
+	this->insertMaster();
 	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 
+	outputBox->Invoke(outputDelegate, outputBox, "Creating tables...");
+	this->createTables();
+	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 
-	this->insertMaster();
-
-	outputBox->Invoke(outputDelegate, outputBox, "Creating letterGrades table...");
-	this->createLetterGrades();
-
-	this->createAudit();
-
-	this->createMaster();
-
-	this->createStanding();
-
-	this->createNeeds();
-
+	outputBox->Invoke(outputDelegate, outputBox, "Calculating...");
 	this->createCanTake();
+	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
 
 	outputBox->Invoke(outputDelegate, outputBox, "Closing Students.db...");
 	dbConnection->Close();
@@ -100,14 +89,15 @@ void Worker::dropTables()
 	dbQuery->ExecuteNonQuery();
 }
 
-void Worker::createLetterGrades()
+void Worker::createTables()
 {
 	dbQuery = dbConnection->CreateCommand();
-	dbQuery->CommandText = "CREATE TABLE letterGrades (`letter` varchar(2) not null, `number` decimal(2,1) not null, primary key (`letter`, `number`));";
-	dbQuery->ExecuteNonQuery();
 
 	dbQuery = gcnew SQLiteCommand("BEGIN", dbConnection);
-	dbQuery->ExecuteNonQuery(); 
+	dbQuery->ExecuteNonQuery();
+
+	dbQuery = gcnew SQLiteCommand("CREATE TABLE `letterGrades` (`letter` varchar(2) not null, `number` decimal(2,1) not null, primary key (`letter`, `number`));", dbConnection);
+	dbQuery->ExecuteNonQuery();
 	dbQuery = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('A+', '4.0');", dbConnection);
 	dbQuery->ExecuteNonQuery();
 	dbQuery = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('A', '4.0');", dbConnection);
@@ -135,50 +125,74 @@ void Worker::createLetterGrades()
 	dbQuery = gcnew SQLiteCommand("INSERT INTO letterGrades VALUES('F', '0.0');", dbConnection);
 	dbQuery->ExecuteNonQuery();
 
+	dbQuery = gcnew SQLiteCommand("CREATE TABLE `audit` AS select `studentInfo` AS `studentID`, `courseID`, `completionStatus`, `number` AS `numericalGrade` FROM `raw_audit` left join `letterGrades` on `letterGrade` = `letter`	WHERE `courseID` != '';", dbConnection);
+	dbQuery->ExecuteNonQuery();
+
+	dbQuery = gcnew SQLiteCommand("CREATE TABLE `master` AS select * FROM (select replace(`courseID`,' ', '') AS `courseID`, `prereq` FROM `raw_master`);", dbConnection);
+	dbQuery->ExecuteNonQuery();
+
+	dbQuery = gcnew SQLiteCommand("CREATE TABLE `standing` AS select distinct `studentID`, 'Senior' AS `collegeLevel` FROM `audit`;", dbConnection);
+	dbQuery->ExecuteNonQuery();
+
+	dbQuery = gcnew SQLiteCommand("CREATE TABLE `needs` AS select `studentID`, `courseID` FROM `audit` WHERE `completionStatus` = 'R';", dbConnection);
+	dbQuery->ExecuteNonQuery();
+
 	dbQuery = gcnew SQLiteCommand("END", dbConnection);
 	dbQuery->ExecuteNonQuery();
 }
 
 void Worker::insertAudit()
 {
-	int numRows = 0;
+	// vars
+	int insertedRows = 0, currentRow = 0;
+	Regex^ regexStudentId = gcnew Regex("^[A][0-9]{10}$", RegexOptions::IgnoreCase);
+	Match^ match;
+
+	// create table
 	dbQuery = dbConnection->CreateCommand();
-	dbQuery->CommandText = "CREATE TABLE raw_audit (`studentInfo` text, `courseID` text, `courseDesc` text, `letterGrade` text, `completionStatus` text);";
+	dbQuery->CommandText = "CREATE TABLE `raw_audit` (`studentInfo` text, `courseID` text, `courseDesc` text, `letterGrade` text, `completionStatus` text);";
 	dbQuery->ExecuteNonQuery();
-	//SQLite Defer for large insertion
+
+	// create transaction for faster insertion
 	dbQuery = gcnew SQLiteCommand("BEGIN", dbConnection);
 	dbQuery->ExecuteNonQuery();
-	Regex^ regex = gcnew Regex("^[A][0-9]{10}$", RegexOptions::IgnoreCase);
-	Match^ match;
+
 	try 
 	{
 		StreamReader^ sr = gcnew StreamReader(this->file_audit);
 		try	
 		{
-			String ^line;
-			String ^id;
-			array<String^>^ temp;
-			while(line = sr->ReadLine())
+			String^ row;
+			String^ id;
+			array<String^>^ column;
+
+			while(row = sr->ReadLine())
 			{
-				numRows++;
-				temp = line->Split(',');
-				match = regex->Match(temp[0]);
+				currentRow++;
+
+				// split the columns (comma seperated file)
+				column = row->Split(',');
+				
+				// look at first column for student ID
+				match = regexStudentId->Match(column[0]);
 				if(match->Success)
 				{
 					id = match->ToString();
 					//outputBox->Invoke(outputDelegate, outputBox, id+"\r\n");
 				}
-				temp[0] = id;
-				if(temp->Length >= 6)
+				column[0] = id;
+				// Insert the data. expected audit csv file should have 6 columns
+				if(column->Length >= 6)
 				{
-					dbQuery = gcnew SQLiteCommand("INSERT INTO raw_audit VALUES('"+temp[0]+"', '"+temp[1]+"', '"+temp[2]+"', '"+temp[5]+"', '"+temp[7]+"');", dbConnection);
+					dbQuery = gcnew SQLiteCommand("INSERT INTO raw_audit VALUES('"+column[0]+"', '"+column[1]+"', '"+column[2]+"', '"+column[5]+"', '"+column[7]+"');", dbConnection);
 					dbQuery->ExecuteNonQuery();
+					insertedRows++;
 				}
 			}
-			//SQLite perform insertion
+			// close transaction and perform the queries
 			dbQuery = gcnew SQLiteCommand("END", dbConnection);
 			dbQuery->ExecuteNonQuery();
-			outputBox->Invoke(outputDelegate, outputBox, "Inserted: "+numRows+". ");
+			outputBox->Invoke(outputDelegate, outputBox, "\r\nInserted into audit: "+insertedRows+" of "+currentRow+".\r\n");
 		}
 		finally
 		{
@@ -188,20 +202,24 @@ void Worker::insertAudit()
 	}
 	catch(Exception^ e) 
 	{
-		// Let the user know what went wrong.
+		// Output the error
 		outputBox->Invoke(outputDelegate, outputBox, "The file could not be read.\r\n");
-		outputBox->Invoke(outputDelegate, outputBox, "Error at:"+numRows+"\r\n");
+		outputBox->Invoke(outputDelegate, outputBox, "Error at: "+currentRow+"\r\n");
 		outputBox->Invoke(outputDelegate, outputBox, e->Message);
 	}
 }
 
 void Worker::insertMaster()
 {
-	int numRows = 0;
+	// vars
+	int insertedRows = 0, currentRow = 0;
+
+	// create table
 	dbQuery = dbConnection->CreateCommand();
-	dbQuery->CommandText = "CREATE TABLE raw_master (`courseID` text, `credits` text, `prereq` text, `coreq` text);";
+	dbQuery->CommandText = "CREATE TABLE `raw_master` (`courseID` text, `credits` text, `prereq` text, `coreq` text);";
 	dbQuery->ExecuteNonQuery();
-	//SQLite Defer for large insertion
+
+	// create transaction for faster insertion
 	dbQuery = gcnew SQLiteCommand("BEGIN", dbConnection);
 	dbQuery->ExecuteNonQuery(); 
 	try 
@@ -209,22 +227,28 @@ void Worker::insertMaster()
 		StreamReader^ sr = gcnew StreamReader(this->file_master);
 		try	
 		{
-			String ^line;
-			array<String^>^ temp;
-			while(line = sr->ReadLine())
+			String^ row;
+			array<String^>^ column;
+
+			while(row = sr->ReadLine())
 			{
-				numRows++;
-				temp = line->Split(',');
-				if(temp->Length >= 14)
+				currentRow++;
+
+				// split the columns (comma seperated file)
+				column = row->Split(',');
+
+				// Insert the data. expected master csv file should have 14 columns
+				if(column->Length >= 14)
 				{
-					dbQuery = gcnew SQLiteCommand("INSERT INTO raw_master VALUES('"+temp[0]+"', '"+temp[1]+"', '"+temp[3]+"', '"+temp[4]+"');", dbConnection);
+					dbQuery = gcnew SQLiteCommand("INSERT INTO raw_master VALUES('"+column[0]+"', '"+column[1]+"', '"+column[3]+"', '"+column[4]+"');", dbConnection);
 					dbQuery->ExecuteNonQuery();
+					insertedRows++;
 				}
 			}
-			//SQLite perform insertion
+			// close transaction and perform the queries
 			dbQuery = gcnew SQLiteCommand("END", dbConnection);
 			dbQuery->ExecuteNonQuery();
-			outputBox->Invoke(outputDelegate, outputBox, "Inserted: "+numRows+". ");
+			outputBox->Invoke(outputDelegate, outputBox, "Inserted into master: "+insertedRows+" of "+currentRow+".\r\n");
 		}
 		finally
 		{
@@ -234,131 +258,124 @@ void Worker::insertMaster()
 	}
 	catch (Exception^ e) 
 	{
-		// Let the user know what went wrong.
+		// Output the error
 		outputBox->Invoke(outputDelegate, outputBox, "The file could not be read.\r\n");
-		outputBox->Invoke(outputDelegate, outputBox, "Error at:"+numRows+"\r\n");
+		outputBox->Invoke(outputDelegate, outputBox, "Error at:"+currentRow+"\r\n");
 		outputBox->Invoke(outputDelegate, outputBox, e->Message);
 	}
 }
 
-void Worker::createAudit()
-{
-	dbQuery = dbConnection->CreateCommand();
-	dbQuery->CommandText = "CREATE TABLE audit AS select `studentInfo` AS `studentID`, `courseID`, `completionStatus`, `number` AS `numericalGrade` FROM `raw_audit` left join `letterGrades` on `letterGrade` = `letter`	WHERE `courseID` != '';";
-	dbQuery->ExecuteNonQuery();
-}
-
-void Worker::createMaster()
-{
-	dbQuery = dbConnection->CreateCommand();
-	dbQuery->CommandText = "CREATE TABLE master AS select * FROM (select replace(`courseID`,' ', '') AS `courseID`, `prereq` FROM `raw_master`) ";
-	dbQuery->ExecuteNonQuery();
-}
-
-void Worker::createStanding()
-{
-	dbQuery = dbConnection->CreateCommand();
-	dbQuery->CommandText = "CREATE TABLE `standing` AS select distinct `studentID`, 'Senior' AS `collegeLevel` FROM `audit`";
-	dbQuery->ExecuteNonQuery();
-}
-
-void Worker::createNeeds()
-{
-	dbQuery = dbConnection->CreateCommand();
-	dbQuery->CommandText = "CREATE TABLE `needs` AS select `studentID`, `courseID` FROM `audit` WHERE `completionStatus` = 'R'";
-	dbQuery->ExecuteNonQuery();
-}
-
 void Worker::createCanTake()
 {
+	// create table
 	dbQuery = dbConnection->CreateCommand();
 	dbQuery->CommandText = "CREATE TABLE canTake ( `StudentID`  text, `CourseID` text)";
 	dbQuery->ExecuteNonQuery();
 
+	// select student and course from needs
 	dbQuery->CommandText = "SELECT `studentID`, `courseID` FROM `needs`;";
-	SQLiteDataReader ^reader = dbQuery->ExecuteReader();
-	String ^row;
+	SQLiteDataReader^ reader = dbQuery->ExecuteReader();
+	String^ row;
 
+	// create transaction for faster insertion
 	dbQuery = gcnew SQLiteCommand("BEGIN", dbConnection);
-	dbQuery->ExecuteNonQuery(); 
+	dbQuery->ExecuteNonQuery();
+
 	while(reader->Read())
     {
+		// build the string StudentID,CourseID
 		for(int col = 0; col < reader->FieldCount; ++col)
         {
 			row += reader->GetValue(col)->ToString();
 			if(col == 0)
 				row += ",";
         }
+
+		// check to see if student is able to take the course, if true insert
 		if(this->preReqs(row))
 		{
-			array<String^> ^take;
 			// take[0] = student ID, take[1] = course ID
+			array<String^>^ take;
 			take = row->Split(',');
+
 			dbQuery = gcnew SQLiteCommand("INSERT INTO canTake VALUES('"+take[0]+"', '"+take[1]+"');", dbConnection);
 			dbQuery->ExecuteNonQuery();
 		}
 		row = "";
     }
+	// close transaction and perform the queries
 	dbQuery = gcnew SQLiteCommand("END", dbConnection);
 	dbQuery->ExecuteNonQuery();
 }
 
 bool Worker::preReqs(String ^pre)
 {
+	// vars
 	bool pass = false;
-	array<String^> ^need;
-	// need[0] = student ID, need[1] = course ID
-	need = pre->Split(',');
-
-	dbQuery = dbConnection->CreateCommand();
-	dbQuery->CommandText = "SELECT `prereq` FROM `master` WHERE `courseID` = \""+need[1]+"\";";
-	SQLiteDataReader ^reader = dbQuery->ExecuteReader();
-	String ^row;
-	Regex^ regex = gcnew Regex("[A-Z]{1,4}[0-9]{3}[A-Z]{0,2}", RegexOptions::IgnoreCase);
-	MatchCollection^ matches;
-	String ^status;
+	String^ row;
+	String^ status;
 	cliext::vector<String^> courses;
 	cliext::vector<String^> formula;
+	Regex^ regexCourse = gcnew Regex("[A-Z]{1,4}[0-9]{3}[A-Z]{0,2}", RegexOptions::IgnoreCase);
+	MatchCollection^ matches;
+
+	// need[0] = student ID, need[1] = course ID
+	array<String^>^ need;
+	need = pre->Split(',');
+
+	// select prerequisites for the course
+	dbQuery = dbConnection->CreateCommand();
+	dbQuery->CommandText = "SELECT `prereq` FROM `master` WHERE `courseID` = \""+need[1]+"\";";
+
+	SQLiteDataReader^ reader = dbQuery->ExecuteReader();
+	
 	while(reader->Read())
     {
+		// grab the prereq string
 		for(int col = 0; col < reader->FieldCount; ++col)
         {
 			row += reader->GetValue(col)->ToString();
-			matches = regex->Matches(row);
 			//outputBox->Invoke(outputDelegate, outputBox, need[1]+" needs: "+row+"\r\n");
+
+			matches = regexCourse->Matches(row);
 			//outputBox->Invoke(outputDelegate, outputBox, matches->Count+"\r\n");
+
+			// for each course in prereq string
 			for each (Match^ match in matches)
 			{
-				//outputBox->Invoke(outputDelegate, outputBox, match->ToString()+"\r\n");
-				for each (String ^s in excluded)
-				{
-					if(s->Contains(match->ToString()))
-					{
-						//return true;
-					}
-				}				
+				//outputBox->Invoke(outputDelegate, outputBox, match->ToString()+"\r\n");	
+
+				// lookup the completetion status of the prereq course
 				dbQuery = dbConnection->CreateCommand();
 				dbQuery->CommandText = "SELECT `completionStatus` FROM `audit` WHERE `studentID` = \""+need[0]+"\" AND `courseID` = \""+match->ToString()+"\";";
-				SQLiteDataReader ^lookup = dbQuery->ExecuteReader();
+
+				SQLiteDataReader^ lookup = dbQuery->ExecuteReader();
+
+				// no completion found
 				if(lookup->HasRows == false)
 				{
 					//outputBox->Invoke(outputDelegate, outputBox, need[0]+"("+need[1]+"):"+match->ToString()+" Not found!\r\n");
 				}
+
+				// found the status
 				while(lookup->Read())
 				{
 					//outputBox->Invoke(outputDelegate, outputBox, lookup->FieldCount+"\r\n");
+
+					// push the status to the vector
 					for(int i = 0; i < lookup->FieldCount; ++i)
 					{
 						status = lookup->GetValue(i)->ToString();
-						//outputBox->Invoke(outputDelegate, outputBox, need[0]+"("+need[1]+"):"+match->ToString()+" = "+status+"\r\n");
 						courses.push_back(match->ToString()+","+status);
-						//return true;
+						//outputBox->Invoke(outputDelegate, outputBox, need[0]+"("+need[1]+"):"+match->ToString()+" = "+status+"\r\n");
 					}
 				}
-			}
-			// Do the logic
-			formula = this->parsePreReq(row);
+			} // end of courses vector 
 
+			// parse the forumula
+			formula = this->parseFormula(row);
+
+			// do the logic
 			int paren = 0;
 			int j = 0;
 			for(int i = 0; i < formula.size(); i++)
@@ -406,48 +423,45 @@ bool Worker::preReqs(String ^pre)
 			}	
         }
 		//outputBox->Invoke(outputDelegate, outputBox, need[1]+": "+reader->GetValue(0)->ToString()+"\r\n");
-    } 
+    }
 	
 }
 
-cliext::vector<String^> Worker::parsePreReq(String ^formula)
+cliext::vector<String^> Worker::parseFormula(String ^formula)
 {
-	String ^temp;
+	String^ buffer;
 	cliext::vector<String^> stack;
 	
-	//outputBox->Invoke(outputDelegate, outputBox, "\r\n"+formula+" = FORMULA\r\n");
+	// iterate over entire formula
 	for(int i = 0; i < formula->Length; i++)
 	{
-		// end of formula
 		if(formula[i] == '(')
 		{
 			stack.push_back("(");
 		}
 		else if(formula[i] == ')')
 		{
-			stack.push_back(temp);
+			stack.push_back(buffer);
 			stack.push_back(")");
-			temp = "";
+			buffer = "";
 		}
 		else if(formula[i] == ' ')
 		{
-			if(temp != "")
+			if(buffer != "")
 			{
-				stack.push_back(temp);
+				stack.push_back(buffer);
 			}
-			//outputBox->Invoke(outputDelegate, outputBox, temp+"\r\n");
-			temp = "";
+			buffer = "";
 		}
 		else if(i == formula->Length-1)
 		{
-			temp += formula[i];
-			stack.push_back(temp);
-			//outputBox->Invoke(outputDelegate, outputBox, temp+"\r\n");
-			temp = "";
+			buffer += formula[i];
+			stack.push_back(buffer);
+			buffer = "";
 		}
 		else
 		{
-			temp += formula[i];
+			buffer += formula[i];
 		}
 	}
 
