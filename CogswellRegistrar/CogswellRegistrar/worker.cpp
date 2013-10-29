@@ -292,7 +292,7 @@ void Worker::createCanTake()
         }
 
 		// check to see if student is able to take the course, if true insert
-		if(this->preReqs(row))
+		if(this->checkPrerequisite(row))
 		{
 			// take[0] = student ID, take[1] = course ID
 			array<String^>^ take;
@@ -308,10 +308,10 @@ void Worker::createCanTake()
 	dbQuery->ExecuteNonQuery();
 }
 
-bool Worker::preReqs(String ^pre)
+bool Worker::checkPrerequisite(String^ str)
 {
 	// vars
-	bool pass = false;
+	bool requirement = false;
 	String^ row;
 	String^ status;
 	cliext::vector<String^> courses;
@@ -321,7 +321,7 @@ bool Worker::preReqs(String ^pre)
 
 	// need[0] = student ID, need[1] = course ID
 	array<String^>^ need;
-	need = pre->Split(',');
+	need = str->Split(',');
 
 	// select prerequisites for the course
 	dbQuery = dbConnection->CreateCommand();
@@ -355,6 +355,7 @@ bool Worker::preReqs(String ^pre)
 				if(lookup->HasRows == false)
 				{
 					//outputBox->Invoke(outputDelegate, outputBox, need[0]+"("+need[1]+"):"+match->ToString()+" Not found!\r\n");
+					courses.push_back(match->ToString()+",NONE");
 				}
 
 				// found the status
@@ -376,55 +377,73 @@ bool Worker::preReqs(String ^pre)
 			formula = this->parseFormula(row);
 
 			// do the logic
-			int paren = 0;
-			int j = 0;
+			int paren = 0, and = 0, or = 0, j = 0;
+			Stack^ stack = gcnew Stack;
+
 			for(int i = 0; i < formula.size(); i++)
 			{
 				if(formula.at(i) == "(")
 				{
 					paren += 1;
 				}
-				if(formula.at(i) == ")")
+				else if(formula.at(i) == ")")
 				{
 					paren -= 1;
 				}
+				else if(formula.at(i) == "AND")
+				{
+					stack->Push("&");
+					and += 1;
+				}
+				else if(formula.at(i) == "OR")
+				{
+					stack->Push("|");
+					or += 1;
+				}
+				else if(formula.at(i) == "College")
+				{
+					// do nothing
+				}
+				else if(formula.at(i) == "Level=Junior")
+				{
+					// do nothing
+				}
+				else if(formula.at(i) == "Level=Senior")
+				{
+					// do nothing
+				}
+				else 
+				{
+					// check the stack
+					if(stack->Count > 0)
+					{
+						outputBox->Invoke(outputDelegate, outputBox, stack->Peek()+"\r\n");
+					}
+					
+					//outputBox->Invoke(outputDelegate, outputBox, "formula: "+formula.at(i)+" = ");
+					if(courses.size() > j)
+					{
+						array<String^>^ course; // course[0] = course, course[1] = completion status
+						course = courses.at(j)->Split(',');
+
+						if(course[1] == "C" || course[1] == "TC" || course[1] == "E")
+						{
+							requirement = true;
+						}
+						//outputBox->Invoke(outputDelegate, outputBox, courses.at(j)+"\r\n");
+						j++;
+					}
+				}				
+				//outputBox->Invoke(outputDelegate, outputBox, formula.at(i)+" ");
 			}
-
-			for(int i = 0; i < courses.size(); i++)
-			{
-				//outputBox->Invoke(outputDelegate, outputBox, courses.at(i)+" "+i+"\r\n");
-
-				bool complete = false;
-				array<String^> ^temp; // temp[0] = course, temp[1] = completion status
-				temp = courses.at(i)->Split(',');
-		
-				// do we have atleast one pass course?
-				if(temp[1] == "TC" || temp[1] == "C" || temp[1] == "E")
-				{
-					complete = true;
-				}
-		
-				// last loop
-				if(i == courses.size()-1)
-				{
-					if(complete == true)
-					{
-						//outputBox->Invoke(outputDelegate, outputBox, need[1]+" needs: "+row+"\r\n");
-						//outputBox->Invoke(outputDelegate, outputBox, "we have one passed course\r\n");
-						return true;
-					}
-					else
-					{
-						//outputBox->Invoke(outputDelegate, outputBox, need[1]+" failed: "+row+"\r\n");
-						//outputBox->Invoke(outputDelegate, outputBox, "all the courses are not met\r\n");
-						return false;
-					}
-				}
-			}	
-        }
-		//outputBox->Invoke(outputDelegate, outputBox, need[1]+": "+reader->GetValue(0)->ToString()+"\r\n");
+			//outputBox->Invoke(outputDelegate, outputBox, "\r\n");
+			// for loop
+			return requirement;
+        } 
+		// while
+		return requirement;
     }
-	
+	return requirement;
 }
 
 cliext::vector<String^> Worker::parseFormula(String ^formula)

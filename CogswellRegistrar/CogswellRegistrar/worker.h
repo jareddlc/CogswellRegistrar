@@ -19,6 +19,6 @@ public:
 	void insertAudit();
 	void insertMaster();
 	void createCanTake();
-	bool preReqs(String^);
+	bool checkPrerequisite(String^);
 	cliext::vector<String^> parseFormula(String^);
 };
