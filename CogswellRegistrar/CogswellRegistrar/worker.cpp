@@ -335,7 +335,7 @@ bool Worker::checkPrerequisite(String^ str)
 		for(int col = 0; col < reader->FieldCount; ++col)
         {
 			row += reader->GetValue(col)->ToString();
-			//outputBox->Invoke(outputDelegate, outputBox, need[1]+" needs: "+row+"\r\n");
+			outputBox->Invoke(outputDelegate, outputBox, need[1]+" needs: "+row+"\r\n");
 
 			matches = regexCourse->Matches(row);
 			//outputBox->Invoke(outputDelegate, outputBox, matches->Count+"\r\n");
@@ -384,11 +384,31 @@ bool Worker::checkPrerequisite(String^ str)
 			{
 				if(formula.at(i) == "(")
 				{
+					stack->Push("(");
 					paren += 1;
 				}
 				else if(formula.at(i) == ")")
 				{
+					stack->Push(")");
+					/*
+					String^ peek = stack->Peek()->ToString();
+					while(peek == "(")
+					{
+						outputBox->Invoke(outputDelegate, outputBox, "peek: "+peek+"\r\n");
+						String^ pop = stack->Pop()->ToString();
+
+						if(pop == "true")
+						{
+							outputBox->Invoke(outputDelegate, outputBox, "pop true\r\n");
+						}
+						else if(pop == "false")
+						{
+							outputBox->Invoke(outputDelegate, outputBox, "pop false\r\n");
+						}
+					}
+					*/
 					paren -= 1;
+
 				}
 				else if(formula.at(i) == "AND")
 				{
@@ -414,12 +434,6 @@ bool Worker::checkPrerequisite(String^ str)
 				}
 				else 
 				{
-					// check the stack
-					if(stack->Count > 0)
-					{
-						outputBox->Invoke(outputDelegate, outputBox, stack->Peek()+"\r\n");
-					}
-					
 					//outputBox->Invoke(outputDelegate, outputBox, "formula: "+formula.at(i)+" = ");
 					if(courses.size() > j)
 					{
@@ -428,16 +442,29 @@ bool Worker::checkPrerequisite(String^ str)
 
 						if(course[1] == "C" || course[1] == "TC" || course[1] == "E")
 						{
-							requirement = true;
+							//requirement = true;
+							stack->Push("true");
 						}
-						//outputBox->Invoke(outputDelegate, outputBox, courses.at(j)+"\r\n");
+						else
+						{
+							stack->Push("false");
+						}
+						
+						outputBox->Invoke(outputDelegate, outputBox, courses.at(j)+"\r\n");
 						j++;
 					}
-				}				
+				}
+				// else
 				//outputBox->Invoke(outputDelegate, outputBox, formula.at(i)+" ");
 			}
 			//outputBox->Invoke(outputDelegate, outputBox, "\r\n");
 			// for loop
+
+			for(int k = 0; k = stack->Count; k ++)
+			{
+				outputBox->Invoke(outputDelegate, outputBox, stack->Pop()+" ");
+			}
+			outputBox->Invoke(outputDelegate, outputBox, "\r\n");
 			return requirement;
         } 
 		// while
