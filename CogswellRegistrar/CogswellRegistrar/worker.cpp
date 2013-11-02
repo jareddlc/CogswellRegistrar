@@ -8,6 +8,9 @@ Worker::Worker(TextBox ^textBox, String ^audit, String ^master)
 	outputDelegate = gcnew setTextBoxText(this, &Worker::setTextBoxMethod);
 	outputBox->Invoke(outputDelegate, outputBox, "Initializing...");
 
+	// excluded lists
+	excluded =  gcnew array<String^> {"MATH010", "MATH003", "MATH115", "MATH116", "MATH143", "MATH144", "MATH133", "MATH134"};
+
 	// input files
 	this->file_audit = audit;
 	this->file_master = master;
@@ -178,7 +181,6 @@ void Worker::insertAudit()
 				if(match->Success)
 				{
 					id = match->ToString();
-					//outputBox->Invoke(outputDelegate, outputBox, id+"\r\n");
 				}
 				column[0] = id;
 				// Insert the data. expected audit csv file should have 6 columns
@@ -335,16 +337,15 @@ bool Worker::checkPrerequisite(String^ str)
 		for(int col = 0; col < reader->FieldCount; ++col)
         {
 			row += reader->GetValue(col)->ToString();
-			outputBox->Invoke(outputDelegate, outputBox, need[1]+" needs: "+row+"\r\n");
+
+			// print the student and the course it needs along with the prerequisites of that course
+			outputBox->Invoke(outputDelegate, outputBox, "Student: "+need[0]+", needs: "+need[1]+", prerequisites: "+row+"\r\n");
 
 			matches = regexCourse->Matches(row);
-			//outputBox->Invoke(outputDelegate, outputBox, matches->Count+"\r\n");
 
 			// for each course in prereq string
 			for each (Match^ match in matches)
 			{
-				//outputBox->Invoke(outputDelegate, outputBox, match->ToString()+"\r\n");	
-
 				// lookup the completetion status of the prereq course
 				dbQuery = dbConnection->CreateCommand();
 				dbQuery->CommandText = "SELECT `completionStatus` FROM `audit` WHERE `studentID` = \""+need[0]+"\" AND `courseID` = \""+match->ToString()+"\";";
@@ -354,21 +355,17 @@ bool Worker::checkPrerequisite(String^ str)
 				// no completion found
 				if(lookup->HasRows == false)
 				{
-					//outputBox->Invoke(outputDelegate, outputBox, need[0]+"("+need[1]+"):"+match->ToString()+" Not found!\r\n");
 					courses.push_back(match->ToString()+",NONE");
 				}
 
-				// found the status
+				// found the completion
 				while(lookup->Read())
 				{
-					//outputBox->Invoke(outputDelegate, outputBox, lookup->FieldCount+"\r\n");
-
 					// push the status to the vector
 					for(int i = 0; i < lookup->FieldCount; ++i)
 					{
 						status = lookup->GetValue(i)->ToString();
 						courses.push_back(match->ToString()+","+status);
-						//outputBox->Invoke(outputDelegate, outputBox, need[0]+"("+need[1]+"):"+match->ToString()+" = "+status+"\r\n");
 					}
 				}
 			} // end of courses vector 
@@ -376,8 +373,8 @@ bool Worker::checkPrerequisite(String^ str)
 			// parse the forumula
 			formula = this->parseFormula(row);
 
-			// do the logic
-			int paren = 0, and = 0, or = 0, j = 0;
+			// build boolean stack
+			int j = 0;
 			Stack^ stack = gcnew Stack;
 
 			for(int i = 0; i < formula.size(); i++)
@@ -385,40 +382,18 @@ bool Worker::checkPrerequisite(String^ str)
 				if(formula.at(i) == "(")
 				{
 					stack->Push("(");
-					paren += 1;
 				}
 				else if(formula.at(i) == ")")
 				{
 					stack->Push(")");
-					/*
-					String^ peek = stack->Peek()->ToString();
-					while(peek == "(")
-					{
-						outputBox->Invoke(outputDelegate, outputBox, "peek: "+peek+"\r\n");
-						String^ pop = stack->Pop()->ToString();
-
-						if(pop == "true")
-						{
-							outputBox->Invoke(outputDelegate, outputBox, "pop true\r\n");
-						}
-						else if(pop == "false")
-						{
-							outputBox->Invoke(outputDelegate, outputBox, "pop false\r\n");
-						}
-					}
-					*/
-					paren -= 1;
-
 				}
 				else if(formula.at(i) == "AND")
 				{
 					stack->Push("&");
-					and += 1;
 				}
 				else if(formula.at(i) == "OR")
 				{
 					stack->Push("|");
-					or += 1;
 				}
 				else if(formula.at(i) == "College")
 				{
@@ -434,7 +409,6 @@ bool Worker::checkPrerequisite(String^ str)
 				}
 				else 
 				{
-					//outputBox->Invoke(outputDelegate, outputBox, "formula: "+formula.at(i)+" = ");
 					if(courses.size() > j)
 					{
 						array<String^>^ course; // course[0] = course, course[1] = completion status
@@ -442,24 +416,23 @@ bool Worker::checkPrerequisite(String^ str)
 
 						if(course[1] == "C" || course[1] == "TC" || course[1] == "E")
 						{
-							//requirement = true;
 							stack->Push("true");
 						}
 						else
 						{
 							stack->Push("false");
 						}
-						
+
+						// print course and status
 						outputBox->Invoke(outputDelegate, outputBox, courses.at(j)+"\r\n");
 						j++;
 					}
 				}
 				// else
-				//outputBox->Invoke(outputDelegate, outputBox, formula.at(i)+" ");
 			}
-			//outputBox->Invoke(outputDelegate, outputBox, "\r\n");
 			// for loop
 
+			// do the logic
 			for(int k = 0; k = stack->Count; k ++)
 			{
 				outputBox->Invoke(outputDelegate, outputBox, stack->Pop()+" ");
@@ -510,6 +483,5 @@ cliext::vector<String^> Worker::parseFormula(String ^formula)
 			buffer += formula[i];
 		}
 	}
-
 	return stack;
 }

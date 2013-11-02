@@ -8,7 +8,8 @@ ref class Worker {
 	TextBox^ outputBox;
 	delegate void setTextBoxText(TextBox^, String^);
 	setTextBoxText^ outputDelegate;
-	cliext::vector<String^> init; // init vector becauase visual c++ is dumb
+	array<String^>^ excluded;
+	cliext::vector<String^> init; // init vector to avoid error LNK2022
 	
 public:
 	Worker(TextBox^, String^, String^);
