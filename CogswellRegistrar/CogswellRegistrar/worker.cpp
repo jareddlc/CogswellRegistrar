@@ -376,7 +376,7 @@ bool Worker::checkPrerequisite(String^ str)
 			// build boolean stack
 			int j = 0;
 			Stack^ stack = gcnew Stack;
-
+			outputBox->Invoke(outputDelegate, outputBox, "Completion status: ");
 			for(int i = 0; i < formula.size(); i++)
 			{
 				if(formula.at(i) == "(")
@@ -424,20 +424,93 @@ bool Worker::checkPrerequisite(String^ str)
 						}
 
 						// print course and status
-						outputBox->Invoke(outputDelegate, outputBox, courses.at(j)+"\r\n");
+						outputBox->Invoke(outputDelegate, outputBox, courses.at(j)+" ");
 						j++;
 					}
 				}
 				// else
 			}
 			// for loop
+			outputBox->Invoke(outputDelegate, outputBox, "\r\n");
 
-			// do the logic
+			// do the logic (invert logic due to stack)
+			int paren = 0;
+			bool pass = false;
+			String^ prevLogic;
+			String^ prevOperator;
 			for(int k = 0; k = stack->Count; k ++)
 			{
-				outputBox->Invoke(outputDelegate, outputBox, stack->Pop()+" ");
+				// keep track of parenthesis
+				if(stack->Peek() == ")")
+				{
+					paren += 1;
+				}
+				else if(stack->Peek() == "(")
+				{
+					paren -= 1;
+				}
+				else 
+				{
+
+						outputBox->Invoke(outputDelegate, outputBox, "prevLogic:"+prevLogic+" prevOperator:"+prevOperator+" current:"+stack->Peek()+"\r\n");
+						// and logic
+						if(prevOperator == "&")
+						{
+							if(prevLogic == "true" && stack->Peek() == "true")
+							{
+								// true
+							}
+							else if(prevLogic == "true" && stack->Peek() == "false")
+							{
+								// false
+							}
+							else if(prevLogic == "false" && stack->Peek() == "true")
+							{
+								// false
+							}
+							else if(prevLogic == "false" && stack->Peek() == "false")
+							{
+								// false
+							}
+						}
+						// or logic
+						else if(prevOperator == "|")
+						{
+							if(prevLogic == "true" && stack->Peek() == "true")
+							{
+								// true
+							}
+							else if(prevLogic == "true" && stack->Peek() == "false")
+							{
+								// true
+							}
+							else if(prevLogic == "false" && stack->Peek() == "true")
+							{
+								// true
+							}
+							else if(prevLogic == "false" && stack->Peek() == "false")
+							{
+								// false
+							}
+						}
+
+				}
+
+				// set previous
+				if(stack->Peek() == "true" || stack->Peek() == "false")
+				{
+					prevLogic = stack->Peek()->ToString();
+				}
+				if(stack->Peek() == "&" || stack->Peek() == "|")
+				{
+					prevOperator = stack->Peek()->ToString();
+				}
+
+				// print and pop
+				stack->Pop();
+				//outputBox->Invoke(outputDelegate, outputBox, stack->Pop()+" ");
 			}
-			outputBox->Invoke(outputDelegate, outputBox, "\r\n");
+			//outputBox->Invoke(outputDelegate, outputBox, "\r\n");
 			return requirement;
         } 
 		// while
