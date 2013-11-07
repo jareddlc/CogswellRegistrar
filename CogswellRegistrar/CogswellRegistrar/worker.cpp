@@ -436,8 +436,8 @@ bool Worker::checkPrerequisite(String^ str)
 			// do the logic (invert logic due to stack)
 			int paren = 0;
 			bool pass = false;
-			String^ prevLogic;
-			String^ prevOperator;
+			cliext::vector<bool> prevLogic;
+			cliext::vector<String^> prevOperator;
 			for(int k = 0; k = stack->Count; k ++)
 			{
 				// keep track of parenthesis
@@ -449,68 +449,29 @@ bool Worker::checkPrerequisite(String^ str)
 				{
 					paren -= 1;
 				}
-				else 
+				else if(stack->Peek() == "&" || stack->Peek() == "|")
 				{
-
-						outputBox->Invoke(outputDelegate, outputBox, "prevLogic:"+prevLogic+" prevOperator:"+prevOperator+" current:"+stack->Peek()+"\r\n");
-						// and logic
-						if(prevOperator == "&")
-						{
-							if(prevLogic == "true" && stack->Peek() == "true")
-							{
-								// true
-							}
-							else if(prevLogic == "true" && stack->Peek() == "false")
-							{
-								// false
-							}
-							else if(prevLogic == "false" && stack->Peek() == "true")
-							{
-								// false
-							}
-							else if(prevLogic == "false" && stack->Peek() == "false")
-							{
-								// false
-							}
-						}
-						// or logic
-						else if(prevOperator == "|")
-						{
-							if(prevLogic == "true" && stack->Peek() == "true")
-							{
-								// true
-							}
-							else if(prevLogic == "true" && stack->Peek() == "false")
-							{
-								// true
-							}
-							else if(prevLogic == "false" && stack->Peek() == "true")
-							{
-								// true
-							}
-							else if(prevLogic == "false" && stack->Peek() == "false")
-							{
-								// false
-							}
-						}
-
+					prevOperator.push_back(stack->Peek()->ToString());
 				}
+				else if(stack->Peek() == "true" || stack->Peek() == "false")
+				{						
+					prevLogic.push_back(stack->Peek() == "true" ? true : false);
+				}
+				outputBox->Invoke(outputDelegate, outputBox, "operator:"+prevOperator.size()+" logic:"+prevLogic.size()+"\r\n");
 
-				// set previous
-				if(stack->Peek() == "true" || stack->Peek() == "false")
+				if(prevOperator.size() > 0 && prevLogic.size() > 0)
 				{
-					prevLogic = stack->Peek()->ToString();
+					//outputBox->Invoke(outputDelegate, outputBox, "prevLogic:"+prevLogic.ToString()+" prevOperator:"+prevOperator+" current:"+stack->Peek()+"\r\n");
 				}
-				if(stack->Peek() == "&" || stack->Peek() == "|")
+				else
 				{
-					prevOperator = stack->Peek()->ToString();
+					//outputBox->Invoke(outputDelegate, outputBox, "current:"+stack->Peek()+"\r\n");
 				}
-
 				// print and pop
 				stack->Pop();
 				//outputBox->Invoke(outputDelegate, outputBox, stack->Pop()+" ");
 			}
-			//outputBox->Invoke(outputDelegate, outputBox, "\r\n");
+			outputBox->Invoke(outputDelegate, outputBox, "\r\n");
 			return requirement;
         } 
 		// while
