@@ -376,7 +376,8 @@ bool Worker::checkPrerequisite(String^ str)
 			// build boolean stack
 			int j = 0;
 			Stack^ stack = gcnew Stack;
-			outputBox->Invoke(outputDelegate, outputBox, "Completion status: ");
+			outputBox->Invoke(outputDelegate, outputBox, "Completion status("+formula.size()+"): ");
+
 			for(int i = 0; i < formula.size(); i++)
 			{
 				if(formula.at(i) == "(")
@@ -427,53 +428,150 @@ bool Worker::checkPrerequisite(String^ str)
 						outputBox->Invoke(outputDelegate, outputBox, courses.at(j)+" ");
 						j++;
 					}
-				}
-				// else
-			}
-			// for loop
+				}// else
+				
+			}// for loop
+			
 			outputBox->Invoke(outputDelegate, outputBox, "\r\n");
 
+			// no stack. assume no prereqs
+			if(formula.size() == 0)
+			{
+				requirement = true;
+			}
+
 			// do the logic (invert logic due to stack)
-			int paren = 0;
-			bool pass = false;
-			cliext::vector<bool> prevLogic;
-			cliext::vector<String^> prevOperator;
+			cliext::vector<bool> operand;
+			cliext::vector<bool> storeOperand;
+			cliext::vector<String^> operate;
+			cliext::vector<String^> storeOperate;
 			for(int k = 0; k = stack->Count; k ++)
 			{
-				// keep track of parenthesis
-				if(stack->Peek() == ")")
+				// inverted parenthesis
+				if(stack->Peek() == ")") // start paren
 				{
-					paren += 1;
+					// check for operator vector, push to store vector, clear
+					if(operate.size() > 0)
+					{
+						storeOperate.push_back(operate.at(0));
+						operate.clear();
+					}
 				}
-				else if(stack->Peek() == "(")
+				else if(stack->Peek() == "(") // end paren
 				{
-					paren -= 1;
 				}
 				else if(stack->Peek() == "&" || stack->Peek() == "|")
 				{
-					prevOperator.push_back(stack->Peek()->ToString());
+					// push operator to vector
+					operate.push_back(stack->Peek()->ToString());
+					// check for operand vector to push operator
+					if(storeOperand.size() > 0)
+					{
+						storeOperate.push_back(stack->Peek()->ToString());
+					}
 				}
 				else if(stack->Peek() == "true" || stack->Peek() == "false")
-				{						
-					prevLogic.push_back(stack->Peek() == "true" ? true : false);
+				{	
+					// push operand to vector
+					operand.push_back(stack->Peek() == "true" ? true : false);
+					outputBox->Invoke(outputDelegate, outputBox, "pushed:"+stack->Peek()+"\r\n");
 				}
-				outputBox->Invoke(outputDelegate, outputBox, "operator:"+prevOperator.size()+" logic:"+prevLogic.size()+"\r\n");
 
-				if(prevOperator.size() > 0 && prevLogic.size() > 0)
+				// check to see if we have 1 operator and 2 operands
+				bool operation;
+				if(operate.size() >= 1 && operand.size() >= 2)
 				{
-					//outputBox->Invoke(outputDelegate, outputBox, "prevLogic:"+prevLogic.ToString()+" prevOperator:"+prevOperator+" current:"+stack->Peek()+"\r\n");
+					// do the boolean operation
+					if(operate.at(0) == "&")
+					{
+						operation = (operand.at(0) && operand.at(1));
+					}
+					else if(operate.at(0) == "|")
+					{
+						operation = (operand.at(0) || operand.at(1));
+					}
+					outputBox->Invoke(outputDelegate, outputBox, operand.at(0)+" "+operate.at(0)+" "+operand.at(1)+" = "+ operation+"\r\n");
+
+					// store the operation
+					storeOperand.push_back(operation);
+					// clear vector
+					operand.clear();
+					operate.clear();
 				}
-				else
+				
+				// check to see if we have operations stored
+				if(storeOperate.size() >= 1 && storeOperand.size() >= 2)
 				{
-					//outputBox->Invoke(outputDelegate, outputBox, "current:"+stack->Peek()+"\r\n");
+					// do the boolean operation
+					if(storeOperate.at(0) == "&")
+					{
+						operation = (storeOperand.at(0) && storeOperand.at(1));
+					}
+					else if(storeOperate.at(0) == "|")
+					{
+						operation = (storeOperand.at(0) || storeOperand.at(1));
+					}
+					outputBox->Invoke(outputDelegate, outputBox, storeOperand.at(0)+" "+storeOperate.at(0)+" "+storeOperand.at(1)+" = "+ operation+"\r\n");
+					// clear vector
+					storeOperand.clear();
+					storeOperate.clear();
+					// store operation
+					storeOperand.push_back(operation);
 				}
-				// print and pop
+				// pop
 				stack->Pop();
-				//outputBox->Invoke(outputDelegate, outputBox, stack->Pop()+" ");
+			}// for loop
+
+			// out of loop check for operations one last time
+			bool operation;
+			if(storeOperate.size() >= 1 && storeOperand.size() >= 2)
+			{
+				// do the boolean operation
+				if(storeOperate.at(0) == "&")
+				{
+					operation = (storeOperand.at(0) && storeOperand.at(1));
+				}
+				else if(storeOperate.at(0) == "|")
+				{
+					operation = (storeOperand.at(0) || storeOperand.at(1));
+				}
+				outputBox->Invoke(outputDelegate, outputBox, storeOperand.at(0)+" "+storeOperate.at(0)+" "+storeOperand.at(1)+" = "+ operation+"\r\n");
+				// clear vector
+				storeOperand.clear();
+				storeOperate.clear();
+
+				requirement = operation;
 			}
-			outputBox->Invoke(outputDelegate, outputBox, "\r\n");
+			/*else if(operand.size() >= 1 && storeOperand.size() >= 1) // check to see if we have operations stored
+			{
+				// do the boolean operation
+				if(storeOperate.at(0) == "&")
+				{
+					operation = (storeOperand.at(0) && operand.at(0));
+				}
+				else if(storeOperate.at(0) == "|")
+				{
+					operation = (storeOperand.at(0) || operand.at(0));
+				}
+				outputBox->Invoke(outputDelegate, outputBox, storeOperand.at(0)+" "+storeOperate.at(0)+" "+operand.at(0)+" = "+ operation+"\r\n");
+				// clear vector
+				storeOperand.clear();
+				storeOperate.clear();
+				// store operation
+				storeOperand.push_back(operation);
+			}*/
+			else if(storeOperand.size() >= 1)
+			{
+				requirement = storeOperand.at(0);
+			}
+			else if(operand.size() >= 1)
+			{
+				requirement = operand.at(0);
+			}
+
+			outputBox->Invoke(outputDelegate, outputBox, "returning: "+requirement+"\r\n");
 			return requirement;
-        } 
+        }
 		// while
 		return requirement;
     }
