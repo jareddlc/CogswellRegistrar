@@ -355,7 +355,7 @@ bool Worker::checkPrerequisite(String^ str)
 				// no completion found
 				if(lookup->HasRows == false)
 				{
-					courses.push_back(match->ToString()+",NONE");
+					courses.push_back(match->ToString()+",TC");
 				}
 
 				// found the completion
@@ -474,7 +474,7 @@ bool Worker::checkPrerequisite(String^ str)
 				{	
 					// push operand to vector
 					operand.push_back(stack->Peek() == "true" ? true : false);
-					outputBox->Invoke(outputDelegate, outputBox, "pushed:"+stack->Peek()+"\r\n");
+					//outputBox->Invoke(outputDelegate, outputBox, "pushed:"+stack->Peek()+"\r\n");
 				}
 
 				// check to see if we have 1 operator and 2 operands
@@ -522,6 +522,7 @@ bool Worker::checkPrerequisite(String^ str)
 				stack->Pop();
 			}// for loop
 
+			//outputBox->Invoke(outputDelegate, outputBox, "storeOperand:"+storeOperand.size()+" storeOperate:"+storeOperate.size()+" operate:"+operate.size()+" operand:"+operand.size()+"\r\n");
 			// out of loop check for operations one last time
 			bool operation;
 			if(storeOperate.size() >= 1 && storeOperand.size() >= 2)
@@ -542,7 +543,7 @@ bool Worker::checkPrerequisite(String^ str)
 
 				requirement = operation;
 			}
-			/*else if(operand.size() >= 1 && storeOperand.size() >= 1) // check to see if we have operations stored
+			else if(storeOperate.size() >= 1 && storeOperand.size() >= 1 && operand.size() >= 1)
 			{
 				// do the boolean operation
 				if(storeOperate.at(0) == "&")
@@ -557,9 +558,9 @@ bool Worker::checkPrerequisite(String^ str)
 				// clear vector
 				storeOperand.clear();
 				storeOperate.clear();
-				// store operation
-				storeOperand.push_back(operation);
-			}*/
+
+				requirement = operation;
+			}
 			else if(storeOperand.size() >= 1)
 			{
 				requirement = storeOperand.at(0);
