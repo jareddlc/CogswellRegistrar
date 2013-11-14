@@ -38,27 +38,36 @@ namespace CogswellRegistrar {
 				delete components;
 			}
 		}
-		private: System::Windows::Forms::GroupBox^  group_settings;
-		private: System::Windows::Forms::Button^  btn_audit;
-		private: System::Windows::Forms::Button^  btn_master;
-		private: System::Windows::Forms::Button^  btn_search;
-		private: System::Windows::Forms::TextBox^  input_search;
-		private: System::Windows::Forms::GroupBox^  group_table;
+
 		public: OpenFileDialog^ file_audit;
 		public: OpenFileDialog^ file_master;
 		public: bool sel_audit;
 		public: bool sel_master;
-		private: System::Windows::Forms::Label^  label_master;
-		private: System::Windows::Forms::Label^  label_audit;
-		private: System::Windows::Forms::Button^  btn_run;
+
+		private: System::Windows::Forms::MenuStrip^  menu_strip;
+		private: System::Windows::Forms::ToolStripMenuItem^  menu_file;
+		private: System::Windows::Forms::ToolStripMenuItem^  menu_close;
+		private: System::Windows::Forms::ToolStripMenuItem^  menu_about;
+		private: System::Windows::Forms::ToolStripMenuItem^  menu_author;
+		private: System::Windows::Forms::ToolStripMenuItem^  menu_version;
+		private: System::Windows::Forms::ToolStripMenuItem^  menu_console;
 		private: System::Windows::Forms::TextBox^  textBox_status;
-		private: System::Windows::Forms::MenuStrip^  menuStrip;
-		private: System::Windows::Forms::ToolStripMenuItem^  fileToolStripMenuItem;
-		private: System::Windows::Forms::ToolStripMenuItem^  closeToolStripMenuItem;
-		private: System::Windows::Forms::ToolStripMenuItem^  aboutToolStripMenuItem;
-		private: System::Windows::Forms::ToolStripMenuItem^  version010ToolStripMenuItem;
-		private: System::Windows::Forms::ToolStripMenuItem^  version010ToolStripMenuItem1;
-		private: System::Windows::Forms::ToolStripMenuItem^  showConsoleToolStripMenuItem;
+		private: System::Windows::Forms::StatusStrip^  status_strip;
+		private: System::Windows::Forms::ToolStripStatusLabel^  status_text;
+		private: System::Windows::Forms::ToolStripButton^  tool_audit;
+		private: System::Windows::Forms::ToolStripButton^  tool_master;
+
+
+		private: System::Windows::Forms::ToolStripSeparator^  tool_seperator_1;
+		private: System::Windows::Forms::ToolStripTextBox^  tool_text_search;
+		private: System::Windows::Forms::ToolStripButton^  tool_search;
+
+
+		private: System::Windows::Forms::ToolStripButton^  tool_run;
+
+		private: System::Windows::Forms::ToolStripSeparator^  tool_seperator_2;
+	private: System::Windows::Forms::ToolStrip^  tool_strip;
+
 		private: System::ComponentModel::IContainer^  components;
 		private:
 		/// <summary>
@@ -74,228 +83,205 @@ namespace CogswellRegistrar {
 		void InitializeComponent(void)
 		{
 			System::ComponentModel::ComponentResourceManager^  resources = (gcnew System::ComponentModel::ComponentResourceManager(Form1::typeid));
-			this->group_settings = (gcnew System::Windows::Forms::GroupBox());
-			this->btn_run = (gcnew System::Windows::Forms::Button());
-			this->label_master = (gcnew System::Windows::Forms::Label());
-			this->label_audit = (gcnew System::Windows::Forms::Label());
-			this->btn_search = (gcnew System::Windows::Forms::Button());
-			this->input_search = (gcnew System::Windows::Forms::TextBox());
-			this->btn_master = (gcnew System::Windows::Forms::Button());
-			this->btn_audit = (gcnew System::Windows::Forms::Button());
-			this->group_table = (gcnew System::Windows::Forms::GroupBox());
+			this->menu_strip = (gcnew System::Windows::Forms::MenuStrip());
+			this->menu_file = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->menu_console = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->menu_close = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->menu_about = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->menu_author = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->menu_version = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->textBox_status = (gcnew System::Windows::Forms::TextBox());
-			this->menuStrip = (gcnew System::Windows::Forms::MenuStrip());
-			this->fileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->showConsoleToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->closeToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->aboutToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->version010ToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->version010ToolStripMenuItem1 = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->group_settings->SuspendLayout();
-			this->group_table->SuspendLayout();
-			this->menuStrip->SuspendLayout();
+			this->status_strip = (gcnew System::Windows::Forms::StatusStrip());
+			this->status_text = (gcnew System::Windows::Forms::ToolStripStatusLabel());
+			this->tool_audit = (gcnew System::Windows::Forms::ToolStripButton());
+			this->tool_master = (gcnew System::Windows::Forms::ToolStripButton());
+			this->tool_strip = (gcnew System::Windows::Forms::ToolStrip());
+			this->tool_seperator_1 = (gcnew System::Windows::Forms::ToolStripSeparator());
+			this->tool_run = (gcnew System::Windows::Forms::ToolStripButton());
+			this->tool_seperator_2 = (gcnew System::Windows::Forms::ToolStripSeparator());
+			this->tool_text_search = (gcnew System::Windows::Forms::ToolStripTextBox());
+			this->tool_search = (gcnew System::Windows::Forms::ToolStripButton());
+			this->menu_strip->SuspendLayout();
+			this->status_strip->SuspendLayout();
+			this->tool_strip->SuspendLayout();
 			this->SuspendLayout();
 			// 
-			// group_settings
+			// menu_strip
 			// 
-			this->group_settings->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left) 
-				| System::Windows::Forms::AnchorStyles::Right));
-			this->group_settings->Controls->Add(this->btn_run);
-			this->group_settings->Controls->Add(this->label_master);
-			this->group_settings->Controls->Add(this->label_audit);
-			this->group_settings->Controls->Add(this->btn_search);
-			this->group_settings->Controls->Add(this->input_search);
-			this->group_settings->Controls->Add(this->btn_master);
-			this->group_settings->Controls->Add(this->btn_audit);
-			this->group_settings->Location = System::Drawing::Point(12, 27);
-			this->group_settings->Name = L"group_settings";
-			this->group_settings->Size = System::Drawing::Size(600, 82);
-			this->group_settings->TabIndex = 0;
-			this->group_settings->TabStop = false;
-			this->group_settings->Text = L"Settings";
+			this->menu_strip->BackColor = System::Drawing::SystemColors::Control;
+			this->menu_strip->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->menu_file, this->menu_about});
+			this->menu_strip->Location = System::Drawing::Point(0, 0);
+			this->menu_strip->Name = L"menu_strip";
+			this->menu_strip->RenderMode = System::Windows::Forms::ToolStripRenderMode::Professional;
+			this->menu_strip->Size = System::Drawing::Size(624, 24);
+			this->menu_strip->TabIndex = 2;
+			this->menu_strip->Text = L"Menu";
 			// 
-			// btn_run
+			// menu_file
 			// 
-			this->btn_run->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-			this->btn_run->Enabled = false;
-			this->btn_run->Image = (cli::safe_cast<System::Drawing::Image^  >(resources->GetObject(L"btn_run.Image")));
-			this->btn_run->ImageAlign = System::Drawing::ContentAlignment::MiddleLeft;
-			this->btn_run->Location = System::Drawing::Point(526, 48);
-			this->btn_run->Name = L"btn_run";
-			this->btn_run->Size = System::Drawing::Size(68, 23);
-			this->btn_run->TabIndex = 6;
-			this->btn_run->Text = L"Process";
-			this->btn_run->TextAlign = System::Drawing::ContentAlignment::MiddleRight;
-			this->btn_run->UseVisualStyleBackColor = true;
-			this->btn_run->Click += gcnew System::EventHandler(this, &Form1::btn_run_Click);
+			this->menu_file->BackColor = System::Drawing::SystemColors::Control;
+			this->menu_file->BackgroundImageLayout = System::Windows::Forms::ImageLayout::None;
+			this->menu_file->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->menu_console, 
+				this->menu_close});
+			this->menu_file->Name = L"menu_file";
+			this->menu_file->Size = System::Drawing::Size(37, 20);
+			this->menu_file->Text = L"File";
 			// 
-			// label_master
+			// menu_console
 			// 
-			this->label_master->AutoSize = true;
-			this->label_master->Location = System::Drawing::Point(99, 53);
-			this->label_master->Name = L"label_master";
-			this->label_master->Size = System::Drawing::Size(62, 13);
-			this->label_master->TabIndex = 5;
-			this->label_master->Text = L"Select file...";
+			this->menu_console->BackColor = System::Drawing::SystemColors::Control;
+			this->menu_console->ForeColor = System::Drawing::SystemColors::ControlText;
+			this->menu_console->Name = L"menu_console";
+			this->menu_console->Size = System::Drawing::Size(149, 22);
+			this->menu_console->Text = L"Show Console";
+			this->menu_console->Click += gcnew System::EventHandler(this, &Form1::menu_console_Click);
 			// 
-			// label_audit
+			// menu_close
 			// 
-			this->label_audit->AutoSize = true;
-			this->label_audit->Location = System::Drawing::Point(99, 24);
-			this->label_audit->Name = L"label_audit";
-			this->label_audit->Size = System::Drawing::Size(62, 13);
-			this->label_audit->TabIndex = 4;
-			this->label_audit->Text = L"Select file...";
+			this->menu_close->Name = L"menu_close";
+			this->menu_close->Size = System::Drawing::Size(149, 22);
+			this->menu_close->Text = L"Close";
+			this->menu_close->Click += gcnew System::EventHandler(this, &Form1::menu_close_Click);
 			// 
-			// btn_search
+			// menu_about
 			// 
-			this->btn_search->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-			this->btn_search->Image = (cli::safe_cast<System::Drawing::Image^  >(resources->GetObject(L"btn_search.Image")));
-			this->btn_search->ImageAlign = System::Drawing::ContentAlignment::MiddleLeft;
-			this->btn_search->Location = System::Drawing::Point(526, 19);
-			this->btn_search->Name = L"btn_search";
-			this->btn_search->Size = System::Drawing::Size(68, 23);
-			this->btn_search->TabIndex = 3;
-			this->btn_search->Text = L"Search";
-			this->btn_search->TextAlign = System::Drawing::ContentAlignment::MiddleRight;
-			this->btn_search->UseVisualStyleBackColor = true;
+			this->menu_about->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->menu_author, 
+				this->menu_version});
+			this->menu_about->Name = L"menu_about";
+			this->menu_about->Size = System::Drawing::Size(52, 20);
+			this->menu_about->Text = L"About";
 			// 
-			// input_search
+			// menu_author
 			// 
-			this->input_search->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-			this->input_search->Location = System::Drawing::Point(352, 22);
-			this->input_search->Name = L"input_search";
-			this->input_search->Size = System::Drawing::Size(168, 20);
-			this->input_search->TabIndex = 2;
+			this->menu_author->Name = L"menu_author";
+			this->menu_author->Size = System::Drawing::Size(179, 22);
+			this->menu_author->Text = L"By: Jared De La Cruz";
 			// 
-			// btn_master
+			// menu_version
 			// 
-			this->btn_master->Image = (cli::safe_cast<System::Drawing::Image^  >(resources->GetObject(L"btn_master.Image")));
-			this->btn_master->ImageAlign = System::Drawing::ContentAlignment::MiddleLeft;
-			this->btn_master->Location = System::Drawing::Point(6, 48);
-			this->btn_master->Name = L"btn_master";
-			this->btn_master->Size = System::Drawing::Size(87, 23);
-			this->btn_master->TabIndex = 1;
-			this->btn_master->Text = L"Master CSV";
-			this->btn_master->TextAlign = System::Drawing::ContentAlignment::MiddleRight;
-			this->btn_master->UseVisualStyleBackColor = true;
-			this->btn_master->Click += gcnew System::EventHandler(this, &Form1::btn_master_Click);
-			// 
-			// btn_audit
-			// 
-			this->btn_audit->Image = (cli::safe_cast<System::Drawing::Image^  >(resources->GetObject(L"btn_audit.Image")));
-			this->btn_audit->ImageAlign = System::Drawing::ContentAlignment::MiddleLeft;
-			this->btn_audit->Location = System::Drawing::Point(6, 19);
-			this->btn_audit->Name = L"btn_audit";
-			this->btn_audit->Size = System::Drawing::Size(87, 23);
-			this->btn_audit->TabIndex = 0;
-			this->btn_audit->Text = L"Audit CSV";
-			this->btn_audit->TextAlign = System::Drawing::ContentAlignment::MiddleRight;
-			this->btn_audit->UseVisualStyleBackColor = true;
-			this->btn_audit->Click += gcnew System::EventHandler(this, &Form1::btn_audit_Click);
-			// 
-			// group_table
-			// 
-			this->group_table->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom) 
-				| System::Windows::Forms::AnchorStyles::Left) 
-				| System::Windows::Forms::AnchorStyles::Right));
-			this->group_table->Controls->Add(this->textBox_status);
-			this->group_table->Location = System::Drawing::Point(12, 115);
-			this->group_table->Name = L"group_table";
-			this->group_table->Size = System::Drawing::Size(600, 315);
-			this->group_table->TabIndex = 1;
-			this->group_table->TabStop = false;
-			this->group_table->Text = L"Table";
+			this->menu_version->Name = L"menu_version";
+			this->menu_version->Size = System::Drawing::Size(179, 22);
+			this->menu_version->Text = L"Version 0.1.0";
 			// 
 			// textBox_status
 			// 
 			this->textBox_status->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom) 
 				| System::Windows::Forms::AnchorStyles::Left) 
 				| System::Windows::Forms::AnchorStyles::Right));
-			this->textBox_status->Location = System::Drawing::Point(6, 19);
+			this->textBox_status->Location = System::Drawing::Point(12, 52);
 			this->textBox_status->Multiline = true;
 			this->textBox_status->Name = L"textBox_status";
 			this->textBox_status->ReadOnly = true;
 			this->textBox_status->ScrollBars = System::Windows::Forms::ScrollBars::Vertical;
-			this->textBox_status->Size = System::Drawing::Size(588, 290);
+			this->textBox_status->Size = System::Drawing::Size(600, 365);
 			this->textBox_status->TabIndex = 0;
 			// 
-			// menuStrip
+			// status_strip
 			// 
-			this->menuStrip->BackColor = System::Drawing::SystemColors::Control;
-			this->menuStrip->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->fileToolStripMenuItem, 
-				this->aboutToolStripMenuItem});
-			this->menuStrip->Location = System::Drawing::Point(0, 0);
-			this->menuStrip->Name = L"menuStrip";
-			this->menuStrip->Size = System::Drawing::Size(624, 24);
-			this->menuStrip->TabIndex = 2;
-			this->menuStrip->Text = L"Menu";
+			this->status_strip->BackColor = System::Drawing::SystemColors::Control;
+			this->status_strip->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) {this->status_text});
+			this->status_strip->Location = System::Drawing::Point(0, 420);
+			this->status_strip->Name = L"status_strip";
+			this->status_strip->Size = System::Drawing::Size(624, 22);
+			this->status_strip->TabIndex = 4;
+			this->status_strip->Text = L"status_strip";
 			// 
-			// fileToolStripMenuItem
+			// status_text
 			// 
-			this->fileToolStripMenuItem->BackColor = System::Drawing::SystemColors::Control;
-			this->fileToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->showConsoleToolStripMenuItem, 
-				this->closeToolStripMenuItem});
-			this->fileToolStripMenuItem->Name = L"fileToolStripMenuItem";
-			this->fileToolStripMenuItem->Size = System::Drawing::Size(37, 20);
-			this->fileToolStripMenuItem->Text = L"File";
+			this->status_text->Name = L"status_text";
+			this->status_text->Size = System::Drawing::Size(39, 17);
+			this->status_text->Text = L"Status";
 			// 
-			// showConsoleToolStripMenuItem
+			// tool_audit
 			// 
-			this->showConsoleToolStripMenuItem->BackColor = System::Drawing::SystemColors::Control;
-			this->showConsoleToolStripMenuItem->ForeColor = System::Drawing::SystemColors::ControlText;
-			this->showConsoleToolStripMenuItem->Name = L"showConsoleToolStripMenuItem";
-			this->showConsoleToolStripMenuItem->Size = System::Drawing::Size(149, 22);
-			this->showConsoleToolStripMenuItem->Text = L"Show Console";
-			this->showConsoleToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::showConsoleToolStripMenuItem_Click);
+			this->tool_audit->Image = (cli::safe_cast<System::Drawing::Image^  >(resources->GetObject(L"tool_audit.Image")));
+			this->tool_audit->ImageTransparentColor = System::Drawing::Color::Magenta;
+			this->tool_audit->Name = L"tool_audit";
+			this->tool_audit->Size = System::Drawing::Size(56, 22);
+			this->tool_audit->Text = L"Audit";
+			this->tool_audit->Click += gcnew System::EventHandler(this, &Form1::tool_audit_Click);
 			// 
-			// closeToolStripMenuItem
+			// tool_master
 			// 
-			this->closeToolStripMenuItem->Name = L"closeToolStripMenuItem";
-			this->closeToolStripMenuItem->Size = System::Drawing::Size(149, 22);
-			this->closeToolStripMenuItem->Text = L"Close";
-			this->closeToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::closeToolStripMenuItem_Click);
+			this->tool_master->Image = (cli::safe_cast<System::Drawing::Image^  >(resources->GetObject(L"tool_master.Image")));
+			this->tool_master->ImageTransparentColor = System::Drawing::Color::Magenta;
+			this->tool_master->Name = L"tool_master";
+			this->tool_master->Size = System::Drawing::Size(63, 22);
+			this->tool_master->Text = L"Master";
+			this->tool_master->Click += gcnew System::EventHandler(this, &Form1::tool_master_Click);
 			// 
-			// aboutToolStripMenuItem
+			// tool_strip
 			// 
-			this->aboutToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->version010ToolStripMenuItem, 
-				this->version010ToolStripMenuItem1});
-			this->aboutToolStripMenuItem->Name = L"aboutToolStripMenuItem";
-			this->aboutToolStripMenuItem->Size = System::Drawing::Size(52, 20);
-			this->aboutToolStripMenuItem->Text = L"About";
+			this->tool_strip->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left) 
+				| System::Windows::Forms::AnchorStyles::Right));
+			this->tool_strip->BackColor = System::Drawing::SystemColors::Control;
+			this->tool_strip->BackgroundImageLayout = System::Windows::Forms::ImageLayout::None;
+			this->tool_strip->Dock = System::Windows::Forms::DockStyle::None;
+			this->tool_strip->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(7) {this->tool_audit, this->tool_master, 
+				this->tool_seperator_1, this->tool_run, this->tool_seperator_2, this->tool_text_search, this->tool_search});
+			this->tool_strip->Location = System::Drawing::Point(0, 24);
+			this->tool_strip->Name = L"tool_strip";
+			this->tool_strip->RenderMode = System::Windows::Forms::ToolStripRenderMode::Professional;
+			this->tool_strip->RightToLeft = System::Windows::Forms::RightToLeft::No;
+			this->tool_strip->Size = System::Drawing::Size(405, 25);
+			this->tool_strip->Stretch = true;
+			this->tool_strip->TabIndex = 3;
+			this->tool_strip->Text = L"tool_strip";
 			// 
-			// version010ToolStripMenuItem
+			// tool_seperator_1
 			// 
-			this->version010ToolStripMenuItem->Name = L"version010ToolStripMenuItem";
-			this->version010ToolStripMenuItem->Size = System::Drawing::Size(179, 22);
-			this->version010ToolStripMenuItem->Text = L"By: Jared De La Cruz";
+			this->tool_seperator_1->Name = L"tool_seperator_1";
+			this->tool_seperator_1->Size = System::Drawing::Size(6, 25);
 			// 
-			// version010ToolStripMenuItem1
+			// tool_run
 			// 
-			this->version010ToolStripMenuItem1->Name = L"version010ToolStripMenuItem1";
-			this->version010ToolStripMenuItem1->Size = System::Drawing::Size(179, 22);
-			this->version010ToolStripMenuItem1->Text = L"Version 0.1.0";
+			this->tool_run->Enabled = false;
+			this->tool_run->Image = (cli::safe_cast<System::Drawing::Image^  >(resources->GetObject(L"tool_run.Image")));
+			this->tool_run->ImageTransparentColor = System::Drawing::Color::Magenta;
+			this->tool_run->Name = L"tool_run";
+			this->tool_run->Size = System::Drawing::Size(67, 22);
+			this->tool_run->Text = L"Process";
+			this->tool_run->Click += gcnew System::EventHandler(this, &Form1::tool_run_Click);
+			// 
+			// tool_seperator_2
+			// 
+			this->tool_seperator_2->Name = L"tool_seperator_2";
+			this->tool_seperator_2->Size = System::Drawing::Size(6, 25);
+			// 
+			// tool_text_search
+			// 
+			this->tool_text_search->Name = L"tool_text_search";
+			this->tool_text_search->Size = System::Drawing::Size(100, 25);
+			// 
+			// tool_search
+			// 
+			this->tool_search->Image = (cli::safe_cast<System::Drawing::Image^  >(resources->GetObject(L"tool_search.Image")));
+			this->tool_search->ImageTransparentColor = System::Drawing::Color::Magenta;
+			this->tool_search->Name = L"tool_search";
+			this->tool_search->Size = System::Drawing::Size(62, 22);
+			this->tool_search->Text = L"Search";
 			// 
 			// Form1
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(624, 442);
-			this->Controls->Add(this->group_table);
-			this->Controls->Add(this->group_settings);
-			this->Controls->Add(this->menuStrip);
+			this->Controls->Add(this->status_strip);
+			this->Controls->Add(this->tool_strip);
+			this->Controls->Add(this->textBox_status);
+			this->Controls->Add(this->menu_strip);
 			this->Icon = (cli::safe_cast<System::Drawing::Icon^  >(resources->GetObject(L"$this.Icon")));
-			this->MainMenuStrip = this->menuStrip;
+			this->MainMenuStrip = this->menu_strip;
 			this->Name = L"Form1";
 			this->Text = L"Cogswell Student Audit";
 			this->WindowState = System::Windows::Forms::FormWindowState::Maximized;
 			this->Load += gcnew System::EventHandler(this, &Form1::Form1_Load);
-			this->group_settings->ResumeLayout(false);
-			this->group_settings->PerformLayout();
-			this->group_table->ResumeLayout(false);
-			this->group_table->PerformLayout();
-			this->menuStrip->ResumeLayout(false);
-			this->menuStrip->PerformLayout();
+			this->menu_strip->ResumeLayout(false);
+			this->menu_strip->PerformLayout();
+			this->status_strip->ResumeLayout(false);
+			this->status_strip->PerformLayout();
+			this->tool_strip->ResumeLayout(false);
+			this->tool_strip->PerformLayout();
 			this->ResumeLayout(false);
 			this->PerformLayout();
 
@@ -307,9 +293,20 @@ namespace CogswellRegistrar {
 			this->textBox_status->Text += L"Application loaded.\r\n";
 			this->textBox_status->Select(textBox_status->Text->Length,0);
 			this->textBox_status->ScrollToCaret();
-		}
 
-		private: System::Void btn_audit_Click(System::Object^  sender, System::EventArgs^  e) {
+			this->status_text->Text = L"Ready, please select an audit file and master file.";
+		}
+		private: System::Void menu_close_Click(System::Object^  sender, System::EventArgs^  e) {
+			exit(0);
+		}
+		private: System::Void menu_console_Click(System::Object^  sender, System::EventArgs^  e) {
+			if(this->textBox_status->Visible == true) {
+				this->textBox_status->Visible = false;
+			}
+			else
+				this->textBox_status->Visible = true;	
+		}
+		private: System::Void tool_audit_Click(System::Object^  sender, System::EventArgs^  e) {
 			file_audit = gcnew OpenFileDialog();
 			file_audit->Filter = "CSV Files|*.csv|All Files|*.*";
 			if(file_audit->ShowDialog() != System::Windows::Forms::DialogResult::OK)
@@ -317,16 +314,16 @@ namespace CogswellRegistrar {
 				return;
 			}
 			sel_audit = true;
-			this->label_audit->Text = file_audit->FileName;
 			this->textBox_status->Text += L"Audit file selected: "+file_audit->FileName+"\r\n";
 
 			//Check to see if files where submitted
 			if(sel_audit && sel_master) 
 			{
-				this->btn_run->Enabled = true;
+				this->tool_run->Enabled = true;
+				this->status_text->Text = L"Ready to process, press the process button to run.";
 			}
 		}
-		private: System::Void btn_master_Click(System::Object^  sender, System::EventArgs^  e) {
+		private: System::Void tool_master_Click(System::Object^  sender, System::EventArgs^  e) {
 			file_master = gcnew OpenFileDialog();
 			file_master->Filter = "CSV Files|*.csv|All Files|*.*";
 			if(file_master->ShowDialog() != System::Windows::Forms::DialogResult::OK)
@@ -334,17 +331,18 @@ namespace CogswellRegistrar {
 				return;
 			}
 			sel_master = true;
-			this->label_master->Text = file_master->FileName;
 			this->textBox_status->Text += L"Master file selected: "+file_master->FileName+"\r\n";
 
 			//Check to see if files where submitted
 			if(sel_audit && sel_master) 
 			{
-				this->btn_run->Enabled = true;
+				this->tool_run->Enabled = true;
+				this->status_text->Text = L"Ready to process, press the process button to run.";
 			}
 		}
-		private: System::Void btn_run_Click(System::Object^  sender, System::EventArgs^  e) {
+		private: System::Void tool_run_Click(System::Object^  sender, System::EventArgs^  e) {
 			work = gcnew Worker(textBox_status, file_audit->FileName, file_master->FileName);
+			this->status_text->Text = L"Processing...please wait.";
 
 			// Create a thread and calls work method
 			workerThread = gcnew Thread(gcnew ThreadStart(work, &Worker::Work));
@@ -352,15 +350,5 @@ namespace CogswellRegistrar {
 			// Start the thread
 			workerThread->Start();
 		}
-		private: System::Void closeToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
-			exit(0);
-		}
-		private: System::Void showConsoleToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
-			if(this->textBox_status->Visible == true) {
-				this->textBox_status->Visible = false;
-			}
-			else
-				this->textBox_status->Visible = true;	
-		}
-};
+	};
 }
