@@ -1,12 +1,44 @@
 #include "stdafx.h"
 #include "worker.h"
 
-Worker::Worker(TextBox ^textBox, String ^audit, String ^master)
+Worker::Worker(TextBox ^textBox, ToolStripStatusLabel^ statusLabel, DataGridView^ dataGrid, String ^audit, String ^master)
 {
 	// textBox
-	outputBox = textBox;
-	outputDelegate = gcnew setTextBoxText(this, &Worker::setTextBoxMethod);
-	outputBox->Invoke(outputDelegate, outputBox, "Initializing...");
+	status_console = textBox;
+	consoleDelegate = gcnew setTextBoxText(this, &Worker::setTextBoxMethod);
+	status_console->Invoke(consoleDelegate, status_console, "Initializing...");
+
+	// status
+	status_text = statusLabel;
+	status_text->Text = "Initializing...";
+
+	// initialize cols
+	col_studentId = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+	col_course = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+
+	// column studentId
+	col_studentId->HeaderText = L"Student ID";
+	col_studentId->Name = L"studentId";
+	col_studentId->AutoSizeMode = System::Windows::Forms::DataGridViewAutoSizeColumnMode::Fill;
+
+	// column course
+	col_course->HeaderText = L"Course";
+	col_course->Name = L"course";
+	col_course->AutoSizeMode = System::Windows::Forms::DataGridViewAutoSizeColumnMode::Fill;
+
+	// columns app
+	columns = gcnew array<System::Windows::Forms::DataGridViewTextBoxColumn^> (2);
+	columns[0] = col_studentId;
+	columns[1] = col_course;
+
+	// dataGrid
+	data_grid = dataGrid;
+	colDelegate = gcnew addCols(this, &Worker::addColsMethod);
+	rowDelegate = gcnew addRow(this, &Worker::addRowMethod);
+	clearDelegate = gcnew clearRow(this, &Worker::clearRowMethod);
+	data_grid->Invoke(colDelegate, data_grid, columns);
+	data_grid->Invoke(clearDelegate, data_grid);
+
 
 	// excluded lists
 	excluded =  gcnew array<String^> {"MATH010", "MATH003", "MATH115", "MATH116", "MATH143", "MATH144", "MATH133", "MATH134"};
@@ -26,42 +58,71 @@ Worker::Worker(TextBox ^textBox, String ^audit, String ^master)
 	this->dbConnection->Flags = static_cast<SQLiteConnectionFlags>((SQLiteConnectionFlags::LogCallbackException | SQLiteConnectionFlags::LogModuleException));
 	this->dbConnection->ParseViaFramework = false;
 
-	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
+	status_console->Invoke(consoleDelegate, status_console, "Done.\r\n");
 }
 
-void Worker::setTextBoxMethod(System::Windows::Forms::TextBox ^T, String ^str)
+void Worker::setTextBoxMethod(System::Windows::Forms::TextBox^ t, String^ str)
 {
-	T->AppendText(str); 
+	t->AppendText(str); 
+}
+
+void Worker::addColsMethod(DataGridView^ d, array<System::Windows::Forms::DataGridViewTextBoxColumn^>^ a)
+{
+	d->Columns->AddRange(gcnew cli::array<System::Windows::Forms::DataGridViewColumn^>(2) {
+		a[0], a[1]
+	});
+}
+
+void Worker::addRowMethod(DataGridView^ d)
+{
+	d->Rows->Add();
+}
+
+void Worker::clearRowMethod(DataGridView^ d)
+{
+	d->Rows->Clear();
 }
 
 void Worker::Work()
 {
-	outputBox->Invoke(outputDelegate, outputBox, "Connecting to Students.db...");
+	status_console->Invoke(consoleDelegate, status_console, "Connecting to Students.db...");
+	status_text->Text = "Connecting to database...";
 	dbConnection->Open();
-	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
+	status_console->Invoke(consoleDelegate, status_console, "Done.\r\n");
 
-	outputBox->Invoke(outputDelegate, outputBox, "Dropping tables...");
+	status_console->Invoke(consoleDelegate, status_console, "Dropping tables...");
+	status_text->Text = "Cleaning up database...";
 	this->dropTables();
-	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
+	status_console->Invoke(consoleDelegate, status_console, "Done.\r\n");
 
-	outputBox->Invoke(outputDelegate, outputBox, "Inserting data...");
+	status_console->Invoke(consoleDelegate, status_console, "Inserting data...");
+	status_text->Text = "Inserting files...";
 	this->insertAudit();
 	this->insertMaster();
-	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
+	status_console->Invoke(consoleDelegate, status_console, "Done.\r\n");
 
-	outputBox->Invoke(outputDelegate, outputBox, "Creating tables...");
+	status_console->Invoke(consoleDelegate, status_console, "Creating tables...");
+	status_text->Text = "Creating tables...";
 	this->createTables();
-	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
+	status_console->Invoke(consoleDelegate, status_console, "Done.\r\n");
 
-	outputBox->Invoke(outputDelegate, outputBox, "Calculating...");
+	status_console->Invoke(consoleDelegate, status_console, "Calculating...");
+	status_text->Text = "Processing...";
 	this->createCanTake();
-	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
+	status_console->Invoke(consoleDelegate, status_console, "Done.\r\n");
 
-	outputBox->Invoke(outputDelegate, outputBox, "Closing Students.db...");
+	status_console->Invoke(consoleDelegate, status_console, "Populating...");
+	status_text->Text = "Displaying rows...";
+	this->populateTable();
+	status_console->Invoke(consoleDelegate, status_console, "Done.\r\n");
+
+	/*status_console->Invoke(consoleDelegate, status_console, "Closing Students.db...");
+	status_text->Text = "Closing database...";
 	dbConnection->Close();
-	outputBox->Invoke(outputDelegate, outputBox, "Done.\r\n");
+	status_console->Invoke(consoleDelegate, status_console, "Done.\r\n");*/
 
-	outputBox->Invoke(outputDelegate, outputBox, "Process complete.\r\n");
+	status_text->Text = "Process complete.";
+	status_console->Invoke(consoleDelegate, status_console, "Process complete.\r\n");
 }
 
 void Worker::dropTables()
@@ -194,7 +255,7 @@ void Worker::insertAudit()
 			// close transaction and perform the queries
 			dbQuery = gcnew SQLiteCommand("END", dbConnection);
 			dbQuery->ExecuteNonQuery();
-			outputBox->Invoke(outputDelegate, outputBox, "\r\nInserted into audit: "+insertedRows+" of "+currentRow+".\r\n");
+			status_console->Invoke(consoleDelegate, status_console, "\r\nInserted into audit: "+insertedRows+" of "+currentRow+".\r\n");
 		}
 		finally
 		{
@@ -205,9 +266,9 @@ void Worker::insertAudit()
 	catch(Exception^ e) 
 	{
 		// Output the error
-		outputBox->Invoke(outputDelegate, outputBox, "The file could not be read.\r\n");
-		outputBox->Invoke(outputDelegate, outputBox, "Error at: "+currentRow+"\r\n");
-		outputBox->Invoke(outputDelegate, outputBox, e->Message);
+		status_console->Invoke(consoleDelegate, status_console, "The file could not be read.\r\n");
+		status_console->Invoke(consoleDelegate, status_console, "Error at: "+currentRow+"\r\n");
+		status_console->Invoke(consoleDelegate, status_console, e->Message);
 	}
 }
 
@@ -250,7 +311,7 @@ void Worker::insertMaster()
 			// close transaction and perform the queries
 			dbQuery = gcnew SQLiteCommand("END", dbConnection);
 			dbQuery->ExecuteNonQuery();
-			outputBox->Invoke(outputDelegate, outputBox, "Inserted into master: "+insertedRows+" of "+currentRow+".\r\n");
+			status_console->Invoke(consoleDelegate, status_console, "Inserted into master: "+insertedRows+" of "+currentRow+".\r\n");
 		}
 		finally
 		{
@@ -261,9 +322,9 @@ void Worker::insertMaster()
 	catch (Exception^ e) 
 	{
 		// Output the error
-		outputBox->Invoke(outputDelegate, outputBox, "The file could not be read.\r\n");
-		outputBox->Invoke(outputDelegate, outputBox, "Error at:"+currentRow+"\r\n");
-		outputBox->Invoke(outputDelegate, outputBox, e->Message);
+		status_console->Invoke(consoleDelegate, status_console, "The file could not be read.\r\n");
+		status_console->Invoke(consoleDelegate, status_console, "Error at:"+currentRow+"\r\n");
+		status_console->Invoke(consoleDelegate, status_console, e->Message);
 	}
 }
 
@@ -339,7 +400,7 @@ bool Worker::checkPrerequisite(String^ str)
 			row += reader->GetValue(col)->ToString();
 
 			// print the student and the course it needs along with the prerequisites of that course
-			outputBox->Invoke(outputDelegate, outputBox, "Student: "+need[0]+", needs: "+need[1]+", prerequisites: "+row+"\r\n");
+			status_console->Invoke(consoleDelegate, status_console, "Student: "+need[0]+", needs: "+need[1]+", prerequisites: "+row+"\r\n");
 
 			matches = regexCourse->Matches(row);
 
@@ -376,7 +437,7 @@ bool Worker::checkPrerequisite(String^ str)
 			// build boolean stack
 			int j = 0;
 			Stack^ stack = gcnew Stack;
-			outputBox->Invoke(outputDelegate, outputBox, "Completion status("+formula.size()+"): ");
+			status_console->Invoke(consoleDelegate, status_console, "Completion status("+formula.size()+"): ");
 
 			for(int i = 0; i < formula.size(); i++)
 			{
@@ -425,14 +486,14 @@ bool Worker::checkPrerequisite(String^ str)
 						}
 
 						// print course and status
-						outputBox->Invoke(outputDelegate, outputBox, courses.at(j)+" ");
+						status_console->Invoke(consoleDelegate, status_console, courses.at(j)+" ");
 						j++;
 					}
 				}// else
 				
 			}// for loop
 			
-			outputBox->Invoke(outputDelegate, outputBox, "\r\n");
+			status_console->Invoke(consoleDelegate, status_console, "\r\n");
 
 			// no stack. assume no prereqs
 			if(formula.size() == 0)
@@ -474,7 +535,7 @@ bool Worker::checkPrerequisite(String^ str)
 				{	
 					// push operand to vector
 					operand.push_back(stack->Peek() == "true" ? true : false);
-					//outputBox->Invoke(outputDelegate, outputBox, "pushed:"+stack->Peek()+"\r\n");
+					//status_console->Invoke(consoleDelegate, status_console, "pushed:"+stack->Peek()+"\r\n");
 				}
 
 				// check to see if we have 1 operator and 2 operands
@@ -490,7 +551,7 @@ bool Worker::checkPrerequisite(String^ str)
 					{
 						operation = (operand.at(0) || operand.at(1));
 					}
-					outputBox->Invoke(outputDelegate, outputBox, operand.at(0)+" "+operate.at(0)+" "+operand.at(1)+" = "+ operation+"\r\n");
+					status_console->Invoke(consoleDelegate, status_console, operand.at(0)+" "+operate.at(0)+" "+operand.at(1)+" = "+ operation+"\r\n");
 
 					// store the operation
 					storeOperand.push_back(operation);
@@ -511,7 +572,7 @@ bool Worker::checkPrerequisite(String^ str)
 					{
 						operation = (storeOperand.at(0) || storeOperand.at(1));
 					}
-					outputBox->Invoke(outputDelegate, outputBox, storeOperand.at(0)+" "+storeOperate.at(0)+" "+storeOperand.at(1)+" = "+ operation+"\r\n");
+					status_console->Invoke(consoleDelegate, status_console, storeOperand.at(0)+" "+storeOperate.at(0)+" "+storeOperand.at(1)+" = "+ operation+"\r\n");
 					// clear vector
 					storeOperand.clear();
 					storeOperate.clear();
@@ -522,7 +583,7 @@ bool Worker::checkPrerequisite(String^ str)
 				stack->Pop();
 			}// for loop
 
-			//outputBox->Invoke(outputDelegate, outputBox, "storeOperand:"+storeOperand.size()+" storeOperate:"+storeOperate.size()+" operate:"+operate.size()+" operand:"+operand.size()+"\r\n");
+			//status_console->Invoke(consoleDelegate, status_console, "storeOperand:"+storeOperand.size()+" storeOperate:"+storeOperate.size()+" operate:"+operate.size()+" operand:"+operand.size()+"\r\n");
 			// out of loop check for operations one last time
 			bool operation;
 			if(storeOperate.size() >= 1 && storeOperand.size() >= 2)
@@ -536,7 +597,7 @@ bool Worker::checkPrerequisite(String^ str)
 				{
 					operation = (storeOperand.at(0) || storeOperand.at(1));
 				}
-				outputBox->Invoke(outputDelegate, outputBox, storeOperand.at(0)+" "+storeOperate.at(0)+" "+storeOperand.at(1)+" = "+ operation+"\r\n");
+				status_console->Invoke(consoleDelegate, status_console, storeOperand.at(0)+" "+storeOperate.at(0)+" "+storeOperand.at(1)+" = "+ operation+"\r\n");
 				// clear vector
 				storeOperand.clear();
 				storeOperate.clear();
@@ -554,7 +615,7 @@ bool Worker::checkPrerequisite(String^ str)
 				{
 					operation = (storeOperand.at(0) || operand.at(0));
 				}
-				outputBox->Invoke(outputDelegate, outputBox, storeOperand.at(0)+" "+storeOperate.at(0)+" "+operand.at(0)+" = "+ operation+"\r\n");
+				status_console->Invoke(consoleDelegate, status_console, storeOperand.at(0)+" "+storeOperate.at(0)+" "+operand.at(0)+" = "+ operation+"\r\n");
 				// clear vector
 				storeOperand.clear();
 				storeOperate.clear();
@@ -570,7 +631,7 @@ bool Worker::checkPrerequisite(String^ str)
 				requirement = operand.at(0);
 			}
 
-			outputBox->Invoke(outputDelegate, outputBox, "returning: "+requirement+"\r\n");
+			status_console->Invoke(consoleDelegate, status_console, "returning: "+requirement+"\r\n");
 			return requirement;
         }
 		// while
@@ -617,4 +678,64 @@ cliext::vector<String^> Worker::parseFormula(String ^formula)
 		}
 	}
 	return stack;
+}
+
+void Worker::populateTable()
+{
+	// select student and course from can take
+	dbQuery = dbConnection->CreateCommand();	
+	dbQuery->CommandText = "SELECT `studentID`, `courseID` FROM `canTake`;";
+	SQLiteDataReader^ reader = dbQuery->ExecuteReader();
+	String^ row;
+	int i = 0;
+	while(reader->Read())
+    {
+		// build the string StudentID,CourseID
+		data_grid->Invoke(rowDelegate, data_grid);
+		for(int col = 0; col < reader->FieldCount; ++col)
+        {
+			row = reader->GetValue(col)->ToString();
+
+			if(col == 0)
+			{
+				data_grid->Rows[i]->Cells["studentId"]->Value = row;
+			}
+			else if(col == 1)
+			{
+				data_grid->Rows[i]->Cells["course"]->Value = row;
+			}
+        }
+		i++;
+    }
+}
+
+void Worker::search(Object^ str)
+{
+	data_grid->Invoke(clearDelegate, data_grid);
+	status_console->Invoke(consoleDelegate, status_console, "Searching for: "+str+"\r\n");
+	// select student and course from can take
+	dbQuery = dbConnection->CreateCommand();	
+	dbQuery->CommandText = "SELECT `studentID`, `courseID` FROM `canTake` WHERE `studentID` LIKE '%"+str+"%' OR `courseID` LIKE '%"+str+"%';";
+	SQLiteDataReader^ reader = dbQuery->ExecuteReader();
+	String^ row;
+	int i = 0;
+	while(reader->Read())
+    {
+		// build the string StudentID,CourseID
+		data_grid->Invoke(rowDelegate, data_grid);
+		for(int col = 0; col < reader->FieldCount; ++col)
+        {
+			row = reader->GetValue(col)->ToString();
+
+			if(col == 0)
+			{
+				data_grid->Rows[i]->Cells["studentId"]->Value = row;
+			}
+			else if(col == 1)
+			{
+				data_grid->Rows[i]->Cells["course"]->Value = row;
+			}
+        }
+		i++;
+    }
 }

@@ -38,12 +38,10 @@ namespace CogswellRegistrar {
 				delete components;
 			}
 		}
-
 		public: OpenFileDialog^ file_audit;
 		public: OpenFileDialog^ file_master;
 		public: bool sel_audit;
 		public: bool sel_master;
-
 		private: System::Windows::Forms::MenuStrip^  menu_strip;
 		private: System::Windows::Forms::ToolStripMenuItem^  menu_file;
 		private: System::Windows::Forms::ToolStripMenuItem^  menu_close;
@@ -54,27 +52,20 @@ namespace CogswellRegistrar {
 		private: System::Windows::Forms::TextBox^  textBox_status;
 		private: System::Windows::Forms::StatusStrip^  status_strip;
 		private: System::Windows::Forms::ToolStripStatusLabel^  status_text;
+		private: System::Windows::Forms::DataGridView^  data_grid;
 		private: System::Windows::Forms::ToolStripButton^  tool_audit;
 		private: System::Windows::Forms::ToolStripButton^  tool_master;
-
-
 		private: System::Windows::Forms::ToolStripSeparator^  tool_seperator_1;
+		private: System::Windows::Forms::ToolStripButton^  tool_run;
+		private: System::Windows::Forms::ToolStripSeparator^  tool_seperator_2;
 		private: System::Windows::Forms::ToolStripTextBox^  tool_text_search;
 		private: System::Windows::Forms::ToolStripButton^  tool_search;
-
-
-		private: System::Windows::Forms::ToolStripButton^  tool_run;
-
-		private: System::Windows::Forms::ToolStripSeparator^  tool_seperator_2;
-	private: System::Windows::Forms::ToolStrip^  tool_strip;
-
+		private: System::Windows::Forms::ToolStrip^  tool_strip;
 		private: System::ComponentModel::IContainer^  components;
 		private:
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
-
-
 		#pragma region Windows Form Designer generated code
 		/// <summary>
 		/// Required method for Designer support - do not modify
@@ -93,16 +84,18 @@ namespace CogswellRegistrar {
 			this->textBox_status = (gcnew System::Windows::Forms::TextBox());
 			this->status_strip = (gcnew System::Windows::Forms::StatusStrip());
 			this->status_text = (gcnew System::Windows::Forms::ToolStripStatusLabel());
+			this->data_grid = (gcnew System::Windows::Forms::DataGridView());
 			this->tool_audit = (gcnew System::Windows::Forms::ToolStripButton());
 			this->tool_master = (gcnew System::Windows::Forms::ToolStripButton());
-			this->tool_strip = (gcnew System::Windows::Forms::ToolStrip());
 			this->tool_seperator_1 = (gcnew System::Windows::Forms::ToolStripSeparator());
 			this->tool_run = (gcnew System::Windows::Forms::ToolStripButton());
 			this->tool_seperator_2 = (gcnew System::Windows::Forms::ToolStripSeparator());
 			this->tool_text_search = (gcnew System::Windows::Forms::ToolStripTextBox());
 			this->tool_search = (gcnew System::Windows::Forms::ToolStripButton());
+			this->tool_strip = (gcnew System::Windows::Forms::ToolStrip());
 			this->menu_strip->SuspendLayout();
 			this->status_strip->SuspendLayout();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->data_grid))->BeginInit();
 			this->tool_strip->SuspendLayout();
 			this->SuspendLayout();
 			// 
@@ -175,6 +168,7 @@ namespace CogswellRegistrar {
 			this->textBox_status->ScrollBars = System::Windows::Forms::ScrollBars::Vertical;
 			this->textBox_status->Size = System::Drawing::Size(600, 365);
 			this->textBox_status->TabIndex = 0;
+			this->textBox_status->Visible = false;
 			// 
 			// status_strip
 			// 
@@ -191,6 +185,21 @@ namespace CogswellRegistrar {
 			this->status_text->Name = L"status_text";
 			this->status_text->Size = System::Drawing::Size(39, 17);
 			this->status_text->Text = L"Status";
+			// 
+			// data_grid
+			// 
+			this->data_grid->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom) 
+				| System::Windows::Forms::AnchorStyles::Left) 
+				| System::Windows::Forms::AnchorStyles::Right));
+			this->data_grid->BackgroundColor = System::Drawing::SystemColors::ControlLight;
+			this->data_grid->BorderStyle = System::Windows::Forms::BorderStyle::Fixed3D;
+			this->data_grid->ColumnHeadersHeightSizeMode = System::Windows::Forms::DataGridViewColumnHeadersHeightSizeMode::AutoSize;
+			this->data_grid->EnableHeadersVisualStyles = false;
+			this->data_grid->Location = System::Drawing::Point(12, 52);
+			this->data_grid->Name = L"data_grid";
+			this->data_grid->RowHeadersVisible = false;
+			this->data_grid->Size = System::Drawing::Size(600, 365);
+			this->data_grid->TabIndex = 5;
 			// 
 			// tool_audit
 			// 
@@ -209,24 +218,6 @@ namespace CogswellRegistrar {
 			this->tool_master->Size = System::Drawing::Size(63, 22);
 			this->tool_master->Text = L"Master";
 			this->tool_master->Click += gcnew System::EventHandler(this, &Form1::tool_master_Click);
-			// 
-			// tool_strip
-			// 
-			this->tool_strip->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left) 
-				| System::Windows::Forms::AnchorStyles::Right));
-			this->tool_strip->BackColor = System::Drawing::SystemColors::Control;
-			this->tool_strip->BackgroundImageLayout = System::Windows::Forms::ImageLayout::None;
-			this->tool_strip->Dock = System::Windows::Forms::DockStyle::None;
-			this->tool_strip->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(7) {this->tool_audit, this->tool_master, 
-				this->tool_seperator_1, this->tool_run, this->tool_seperator_2, this->tool_text_search, this->tool_search});
-			this->tool_strip->Location = System::Drawing::Point(0, 24);
-			this->tool_strip->Name = L"tool_strip";
-			this->tool_strip->RenderMode = System::Windows::Forms::ToolStripRenderMode::Professional;
-			this->tool_strip->RightToLeft = System::Windows::Forms::RightToLeft::No;
-			this->tool_strip->Size = System::Drawing::Size(405, 25);
-			this->tool_strip->Stretch = true;
-			this->tool_strip->TabIndex = 3;
-			this->tool_strip->Text = L"tool_strip";
 			// 
 			// tool_seperator_1
 			// 
@@ -255,17 +246,38 @@ namespace CogswellRegistrar {
 			// 
 			// tool_search
 			// 
+			this->tool_search->Enabled = false;
 			this->tool_search->Image = (cli::safe_cast<System::Drawing::Image^  >(resources->GetObject(L"tool_search.Image")));
 			this->tool_search->ImageTransparentColor = System::Drawing::Color::Magenta;
 			this->tool_search->Name = L"tool_search";
 			this->tool_search->Size = System::Drawing::Size(62, 22);
 			this->tool_search->Text = L"Search";
+			this->tool_search->Click += gcnew System::EventHandler(this, &Form1::tool_search_Click);
+			// 
+			// tool_strip
+			// 
+			this->tool_strip->AutoSize = false;
+			this->tool_strip->BackColor = System::Drawing::SystemColors::Control;
+			this->tool_strip->BackgroundImageLayout = System::Windows::Forms::ImageLayout::None;
+			this->tool_strip->Dock = System::Windows::Forms::DockStyle::None;
+			this->tool_strip->ImeMode = System::Windows::Forms::ImeMode::NoControl;
+			this->tool_strip->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(7) {this->tool_audit, this->tool_master, 
+				this->tool_seperator_1, this->tool_run, this->tool_seperator_2, this->tool_text_search, this->tool_search});
+			this->tool_strip->Location = System::Drawing::Point(0, 24);
+			this->tool_strip->Name = L"tool_strip";
+			this->tool_strip->Padding = System::Windows::Forms::Padding(0);
+			this->tool_strip->RenderMode = System::Windows::Forms::ToolStripRenderMode::Professional;
+			this->tool_strip->RightToLeft = System::Windows::Forms::RightToLeft::No;
+			this->tool_strip->Size = System::Drawing::Size(405, 25);
+			this->tool_strip->TabIndex = 3;
+			this->tool_strip->Text = L"tool_strip";
 			// 
 			// Form1
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(624, 442);
+			this->Controls->Add(this->data_grid);
 			this->Controls->Add(this->status_strip);
 			this->Controls->Add(this->tool_strip);
 			this->Controls->Add(this->textBox_status);
@@ -280,6 +292,7 @@ namespace CogswellRegistrar {
 			this->menu_strip->PerformLayout();
 			this->status_strip->ResumeLayout(false);
 			this->status_strip->PerformLayout();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->data_grid))->EndInit();
 			this->tool_strip->ResumeLayout(false);
 			this->tool_strip->PerformLayout();
 			this->ResumeLayout(false);
@@ -300,11 +313,17 @@ namespace CogswellRegistrar {
 			exit(0);
 		}
 		private: System::Void menu_console_Click(System::Object^  sender, System::EventArgs^  e) {
-			if(this->textBox_status->Visible == true) {
+			if(this->textBox_status->Visible == true) 
+			{
 				this->textBox_status->Visible = false;
+				this->data_grid->Visible = true;
 			}
 			else
-				this->textBox_status->Visible = true;	
+			{
+				this->textBox_status->Visible = true;
+				this->data_grid->Visible = false;
+			}
+					
 		}
 		private: System::Void tool_audit_Click(System::Object^  sender, System::EventArgs^  e) {
 			file_audit = gcnew OpenFileDialog();
@@ -341,14 +360,40 @@ namespace CogswellRegistrar {
 			}
 		}
 		private: System::Void tool_run_Click(System::Object^  sender, System::EventArgs^  e) {
-			work = gcnew Worker(textBox_status, file_audit->FileName, file_master->FileName);
-			this->status_text->Text = L"Processing...please wait.";
+			// enable search button
+			this->tool_search->Enabled = true;
+
+			// initialize worker class
+			work = gcnew Worker(textBox_status, status_text, data_grid, file_audit->FileName, file_master->FileName);
 
 			// Create a thread and calls work method
 			workerThread = gcnew Thread(gcnew ThreadStart(work, &Worker::Work));
 
 			// Start the thread
 			workerThread->Start();
+		}
+		private: System::Void tool_search_Click(System::Object^  sender, System::EventArgs^  e) {
+
+			String^ str;
+			// check to see if something was entered
+			if(this->tool_text_search->TextLength > 0)
+			{
+				// get the text
+				str = this->tool_text_search->ToString();
+
+				
+			}
+			else
+			{
+				// set the text to blank
+				str = "";
+
+			}
+			// create thread and call search method
+			workerThread = gcnew Thread(gcnew ParameterizedThreadStart(work, &Worker::search));
+
+			// Start the thread
+			workerThread->Start(str);
 		}
 	};
 }
