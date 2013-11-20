@@ -40,6 +40,7 @@ namespace CogswellRegistrar {
 		}
 		public: OpenFileDialog^ file_audit;
 		public: OpenFileDialog^ file_master;
+		public: SaveFileDialog^ file_save;
 		public: bool sel_audit;
 		public: bool sel_master;
 		private: System::Windows::Forms::MenuStrip^  menu_strip;
@@ -61,6 +62,7 @@ namespace CogswellRegistrar {
 		private: System::Windows::Forms::ToolStripTextBox^  tool_text_search;
 		private: System::Windows::Forms::ToolStripButton^  tool_search;
 		private: System::Windows::Forms::ToolStrip^  tool_strip;
+		private: System::Windows::Forms::ToolStripMenuItem^  menu_save;
 		private: System::ComponentModel::IContainer^  components;
 		private:
 		/// <summary>
@@ -76,6 +78,7 @@ namespace CogswellRegistrar {
 			System::ComponentModel::ComponentResourceManager^  resources = (gcnew System::ComponentModel::ComponentResourceManager(Form1::typeid));
 			this->menu_strip = (gcnew System::Windows::Forms::MenuStrip());
 			this->menu_file = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->menu_save = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->menu_console = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->menu_close = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->menu_about = (gcnew System::Windows::Forms::ToolStripMenuItem());
@@ -114,11 +117,18 @@ namespace CogswellRegistrar {
 			// 
 			this->menu_file->BackColor = System::Drawing::SystemColors::Control;
 			this->menu_file->BackgroundImageLayout = System::Windows::Forms::ImageLayout::None;
-			this->menu_file->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->menu_console, 
-				this->menu_close});
+			this->menu_file->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(3) {this->menu_save, 
+				this->menu_console, this->menu_close});
 			this->menu_file->Name = L"menu_file";
 			this->menu_file->Size = System::Drawing::Size(37, 20);
 			this->menu_file->Text = L"File";
+			// 
+			// menu_save
+			// 
+			this->menu_save->Name = L"menu_save";
+			this->menu_save->Size = System::Drawing::Size(149, 22);
+			this->menu_save->Text = L"Save";
+			this->menu_save->Click += gcnew System::EventHandler(this, &Form1::menu_save_Click);
 			// 
 			// menu_console
 			// 
@@ -394,6 +404,21 @@ namespace CogswellRegistrar {
 
 			// Start the thread
 			workerThread->Start(str);
+		}
+		private: System::Void menu_save_Click(System::Object^  sender, System::EventArgs^  e) {
+			file_save = gcnew SaveFileDialog();
+			file_save->Filter = "CSV Files|*.csv|All Files|*.*";
+			if(file_save->ShowDialog() != System::Windows::Forms::DialogResult::OK)
+			{
+				return;
+			}
+			this->textBox_status->Text += L"Save file selected: "+file_save->FileName+"\r\n";
+
+			// create thread and call search method
+			workerThread = gcnew Thread(gcnew ParameterizedThreadStart(work, &Worker::saveFile));
+
+			// Start the thread
+			workerThread->Start(file_save->FileName);
 		}
 	};
 }

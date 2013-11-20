@@ -21,6 +21,7 @@ ref class Worker {
 	array<String^>^ excluded;
 	array<System::Windows::Forms::DataGridViewTextBoxColumn^>^ columns;
 	cliext::vector<String^> init; // init vector to avoid error LNK2022
+	cliext::vector<String^> save;
 	
 public:
 	Worker(TextBox^, ToolStripStatusLabel^, DataGridView^, String^, String^);
@@ -31,9 +32,9 @@ public:
 	void insertMaster();
 	void createCanTake();
 	bool checkPrerequisite(String^);
-	void populateTable();
 	cliext::vector<String^> parseFormula(String^);
 	void search(Object^ str);
+	void saveFile(Object^ str);
 	// GUI
 	void setTextBoxMethod(TextBox^, String^);
 	void addColsMethod(DataGridView^, array<System::Windows::Forms::DataGridViewTextBoxColumn^>^);

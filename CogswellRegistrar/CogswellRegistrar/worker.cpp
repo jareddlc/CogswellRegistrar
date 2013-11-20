@@ -113,7 +113,8 @@ void Worker::Work()
 
 	status_console->Invoke(consoleDelegate, status_console, "Populating...");
 	status_text->Text = "Displaying rows...";
-	this->populateTable();
+	//this->populateTable();
+	this->search("");
 	status_console->Invoke(consoleDelegate, status_console, "Done.\r\n");
 
 	/*status_console->Invoke(consoleDelegate, status_console, "Closing Students.db...");
@@ -680,38 +681,10 @@ cliext::vector<String^> Worker::parseFormula(String ^formula)
 	return stack;
 }
 
-void Worker::populateTable()
-{
-	// select student and course from can take
-	dbQuery = dbConnection->CreateCommand();	
-	dbQuery->CommandText = "SELECT `studentID`, `courseID` FROM `canTake`;";
-	SQLiteDataReader^ reader = dbQuery->ExecuteReader();
-	String^ row;
-	int i = 0;
-	while(reader->Read())
-    {
-		// build the string StudentID,CourseID
-		data_grid->Invoke(rowDelegate, data_grid);
-		for(int col = 0; col < reader->FieldCount; ++col)
-        {
-			row = reader->GetValue(col)->ToString();
-
-			if(col == 0)
-			{
-				data_grid->Rows[i]->Cells["studentId"]->Value = row;
-			}
-			else if(col == 1)
-			{
-				data_grid->Rows[i]->Cells["course"]->Value = row;
-			}
-        }
-		i++;
-    }
-}
-
 void Worker::search(Object^ str)
 {
 	data_grid->Invoke(clearDelegate, data_grid);
+	save.clear();
 	status_console->Invoke(consoleDelegate, status_console, "Searching for: "+str+"\r\n");
 	// select student and course from can take
 	dbQuery = dbConnection->CreateCommand();	
@@ -722,20 +695,36 @@ void Worker::search(Object^ str)
 	while(reader->Read())
     {
 		// build the string StudentID,CourseID
+		String^ temp = "";
 		data_grid->Invoke(rowDelegate, data_grid);
 		for(int col = 0; col < reader->FieldCount; ++col)
         {
 			row = reader->GetValue(col)->ToString();
-
 			if(col == 0)
 			{
 				data_grid->Rows[i]->Cells["studentId"]->Value = row;
 			}
 			else if(col == 1)
 			{
+				temp += ",";
 				data_grid->Rows[i]->Cells["course"]->Value = row;
 			}
+			temp += row;
         }
+		save.push_back(temp);
 		i++;
     }
+}
+
+void Worker::saveFile(Object^ str)
+{
+	StreamWriter^ sw = gcnew StreamWriter(str->ToString());
+	sw->WriteLine("Student ID, Course");
+	for(int i = 0; i < save.size(); i++)
+	{
+		array<String^>^ column;
+		column = save.at(i)->Split(',');
+		sw->WriteLine(column[0]+","+column[1]);
+	}
+	sw->Close();
 }
