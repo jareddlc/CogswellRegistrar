@@ -1,5 +1,6 @@
 #pragma once
 #include "worker.h"
+#include "tuts.h"
 
 namespace CogswellRegistrar {
 
@@ -63,6 +64,8 @@ namespace CogswellRegistrar {
 		private: System::Windows::Forms::ToolStripButton^  tool_search;
 		private: System::Windows::Forms::ToolStrip^  tool_strip;
 		private: System::Windows::Forms::ToolStripMenuItem^  menu_save;
+		private: System::Windows::Forms::ToolStripMenuItem^  instructionsToolStripMenuItem;
+		private: System::Windows::Forms::ToolStripMenuItem^  menu_source;
 		private: System::ComponentModel::IContainer^  components;
 		private:
 		/// <summary>
@@ -81,9 +84,11 @@ namespace CogswellRegistrar {
 			this->menu_save = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->menu_console = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->menu_close = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->instructionsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->menu_about = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->menu_author = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->menu_version = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->menu_source = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->textBox_status = (gcnew System::Windows::Forms::TextBox());
 			this->status_strip = (gcnew System::Windows::Forms::StatusStrip());
 			this->status_text = (gcnew System::Windows::Forms::ToolStripStatusLabel());
@@ -105,7 +110,8 @@ namespace CogswellRegistrar {
 			// menu_strip
 			// 
 			this->menu_strip->BackColor = System::Drawing::SystemColors::Control;
-			this->menu_strip->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->menu_file, this->menu_about});
+			this->menu_strip->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(3) {this->menu_file, this->instructionsToolStripMenuItem, 
+				this->menu_about});
 			this->menu_strip->Location = System::Drawing::Point(0, 0);
 			this->menu_strip->Name = L"menu_strip";
 			this->menu_strip->RenderMode = System::Windows::Forms::ToolStripRenderMode::Professional;
@@ -146,10 +152,17 @@ namespace CogswellRegistrar {
 			this->menu_close->Text = L"Close";
 			this->menu_close->Click += gcnew System::EventHandler(this, &Form1::menu_close_Click);
 			// 
+			// instructionsToolStripMenuItem
+			// 
+			this->instructionsToolStripMenuItem->Name = L"instructionsToolStripMenuItem";
+			this->instructionsToolStripMenuItem->Size = System::Drawing::Size(81, 20);
+			this->instructionsToolStripMenuItem->Text = L"Instructions";
+			this->instructionsToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::instructionsToolStripMenuItem_Click);
+			// 
 			// menu_about
 			// 
-			this->menu_about->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->menu_author, 
-				this->menu_version});
+			this->menu_about->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(3) {this->menu_author, 
+				this->menu_version, this->menu_source});
 			this->menu_about->Name = L"menu_about";
 			this->menu_about->Size = System::Drawing::Size(52, 20);
 			this->menu_about->Text = L"About";
@@ -165,6 +178,13 @@ namespace CogswellRegistrar {
 			this->menu_version->Name = L"menu_version";
 			this->menu_version->Size = System::Drawing::Size(179, 22);
 			this->menu_version->Text = L"Version 0.1.0";
+			// 
+			// menu_source
+			// 
+			this->menu_source->Name = L"menu_source";
+			this->menu_source->Size = System::Drawing::Size(179, 22);
+			this->menu_source->Text = L"Github: source";
+			this->menu_source->Click += gcnew System::EventHandler(this, &Form1::menu_source_Click);
 			// 
 			// textBox_status
 			// 
@@ -390,14 +410,11 @@ namespace CogswellRegistrar {
 			{
 				// get the text
 				str = this->tool_text_search->ToString();
-
-				
 			}
 			else
 			{
 				// set the text to blank
 				str = "";
-
 			}
 			// create thread and call search method
 			workerThread = gcnew Thread(gcnew ParameterizedThreadStart(work, &Worker::search));
@@ -419,6 +436,19 @@ namespace CogswellRegistrar {
 
 			// Start the thread
 			workerThread->Start(file_save->FileName);
+		}
+		private: System::Void instructionsToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+			tuts^ instructions = gcnew tuts;
+
+			// Show testDialog as a modal dialog and determine if DialogResult = OK. 
+			if( instructions->ShowDialog(this) == ::DialogResult::OK)
+			{
+
+			}
+			delete instructions;
+		}
+		private: System::Void menu_source_Click(System::Object^  sender, System::EventArgs^  e) {
+			System::Diagnostics::Process::Start("https://github.com/jareddlc/CogswellRegistrar");
 		}
 	};
 }
